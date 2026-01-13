@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .workout-selector {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .workout-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .workout-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f0f0f0;
+        }
+
+        .workout-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .exercise-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .exercise-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .youtube-btn {
+            background: #ff0000;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .set-input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 80px;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-wrapper label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .input-wrapper input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .add-set-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .timer-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .timer-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .timer-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+        }
+
+        .timer-btn.stop {
+            background: #f44336;
+        }
+
+        .timer-btn.reset {
+            background: #ff9800;
+        }
+
+        .history-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95em;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 90%;
+            max-height: 80%;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 2em;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal iframe {
+            width: 100%;
+            height: 315px;
+            border: none;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💪 Workout Tracker</h1>
+
+        <div class="workout-selector">
+            <h2 style="margin-bottom: 15px;">Select Workout</h2>
+            <div class="workout-buttons">
+                <button class="workout-btn active" onclick="selectWorkout('A')">Workout A</button>
+                <button class="workout-btn" onclick="selectWorkout('B')">Workout B</button>
+                <button class="workout-btn" onclick="selectWorkout('C')">Workout C</button>
+                <button class="workout-btn" onclick="selectWorkout('D')">Workout D</button>
+            </div>
+            <div style="margin-top: 10px;">
+                <button class="workout-btn" onclick="selectWorkout('Forearms')" style="width: 100%; background: #ff9800; color: white;">💪 Forearm Work</button>
+            </div>
+        </div>
+
+        <div class="timer-section">
+            <h2>Rest Timer</h2>
+            <div class="timer-display" id="timerDisplay">0:00</div>
+            <div class="timer-buttons">
+                <button class="timer-btn" onclick="startTimer(90)">90s</button>
+                <button class="timer-btn" onclick="startTimer(180)">3min</button>
+                <button class="timer-btn" onclick="startTimer(300)">5min</button>
+            </div>
+            <div class="timer-buttons" style="margin-top: 10px;">
+                <button class="timer-btn stop" onclick="stopTimer()">Stop</button>
+                <button class="timer-btn reset" onclick="resetTimer()">Reset</button>
+                <button class="timer-btn" onclick="startTimer(customTime)">Custom</button>
+            </div>
+        </div>
+
+        <div id="exerciseContainer"></div>
+
+        <div class="history-section">
+            <h2 style="margin-bottom: 15px;">Recent Workouts</h2>
+            <div id="historyContainer"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="videoModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="videoContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const workouts = {
+            A: {
+                exercises: [
+                    // Main Lifts
+                    { name: 'Barbell Back Squat', videoId: 'ultWZbUMPL8', sets: '5x5' },
+                    { name: 'Barbell Bench Press', videoId: 'rT7DgCr-3pg', sets: '5x5' },
+                    { name: 'Barbell Row', videoId: 'FWJR5Ve8bnQ', sets: '5x5' },
+                    // Shoulders
+                    { name: 'Dumbbell Lateral Raises', videoId: '3VcKaXpzqRo', sets: '3x12-15' },
+                    { name: 'Cable Kneeling Face Pulls', videoId: '_L5P--9cFDg', sets: '3x12-15' },
+                    // Rotator Cuff
+                    { name: 'Full Can Exercise (Scaption)', videoId: '-NA8lUy5_Qc&t=160s', sets: '2x12-15' },
+                    { name: 'Cable Internal Rotation', videoId: 'Eh8pu_wUKHU', sets: '2x12-15' },
+                    // Arms
+                    { name: 'Overhead Dumbbell Tricep Extension', videoId: 'YbX7Wd8jQ-Q', sets: '3x10-12' },
+                    { name: 'Narrow Grip EZ Bar Curl', videoId: 'cdmnvo3augg', sets: '3x8-12' },
+                    // Back
+                    { name: 'Cable Kneeling Lat Pulldown', videoId: 'KA0bfBIOxHY&t=17s', sets: '3x10-15' },
+                    // Chest
+                    { name: 'Incline Dumbbell Bench Press', videoId: 'hChjZQhX1Ls', sets: '3x8-12' }
+                ]
+            },
+            B: {
+                exercises: [
+                    // Main Lifts
+                    { name: 'Barbell Back Squat', videoId: 'ultWZbUMPL8', sets: '5x5' },
+                    { name: 'Barbell Overhead Press', videoId: 'QAQ64hK4Xxs', sets: '5x5' },
+                    { name: 'Barbell Deadlift', videoId: 'op9kVnSso6Q', sets: '1x5' },
+                    // Traps
+                    { name: 'Barbell Shrugs (wide grip)', videoId: 'g6qbq4Lf1FI', sets: '4x10-12' },
+                    // Calves
+                    { name: 'Standing Calf Raises', videoId: 'gwLzBJYoWlI', sets: '4x12-20' },
+                    { name: 'Seated Calf Raises', videoId: 'JbyjNymZOt0', sets: '3x15-20' },
+                    // Quads
+                    { name: 'Leg Extensions', videoId: 'YyvSfVjQeL0', sets: '3x12-15' },
+                    { name: 'Banded Terminal Knee Extensions', videoId: 'M8u5lbP4f4g&t=263s', sets: '2x15-20' },
+                    // Hamstrings
+                    { name: 'Glute Ham Raise', videoId: '24pK_4kEUsM&t=23s', sets: '3x8-12' },
+                    // Glutes
+                    { name: 'Barbell Hip Thrusts', videoId: 'EF7jXP17DPE', sets: '3x12-15' },
+                    // Core
+                    { name: 'Hanging Knee Raises', videoId: 'Fl8rJJ7mZJM&t=2s', sets: '3x10-15' },
+                    { name: 'Ab Wheel Rollouts', videoId: 'XWJmFD_AdbM', sets: '3x8-12' }
+                ]
+            },
+            C: {
+                exercises: [
+                    // Main Lifts
+                    { name: 'Barbell Back Squat', videoId: 'ultWZbUMPL8', sets: '5x5' },
+                    { name: 'Barbell Bench Press', videoId: 'rT7DgCr-3pg', sets: '5x5' },
+                    { name: 'Barbell Row', videoId: 'FWJR5Ve8bnQ', sets: '5x5' },
+                    // Shoulders
+                    { name: 'Cable Rear Delt Fly', videoId: 'FeERX9UwspY', sets: '3x12-15' },
+                    // Rotator Cuff
+                    { name: 'Side-lying External Rotations', videoId: 'jJo1CbgXb_A&t=66s', sets: '3x15-20' },
+                    { name: 'Cable External Rotation Press', videoId: 'mO8YJAxVG2M&t=142s', sets: '2x10-15' },
+                    // Arms
+                    { name: 'Straight Bar Cable Pushdown', videoId: '1FjkhpZsaxc', sets: '3x10-15' },
+                    { name: 'Rope Cable Pushdown', videoId: 'kiuVA0gs3EI', sets: '3x10-15' },
+                    { name: 'Wide Grip Barbell Curl / Preacher Curl', videoId: 'soxrZlIl35U', sets: '3x8-12' },
+                    { name: 'Dumbbell Hammer Curls', videoId: 'P5sXHLmXmBM', sets: '3x10-12' },
+                    // Back
+                    { name: 'Cable Reverse Grip Lat Pulldown', videoId: 'rguA3pm73rs', sets: '3x10-15' },
+                    { name: 'Straight-Arm Cable Pulldown', videoId: 'G9uNaXGTJ4w', sets: '3x12-15' },
+                    // Chest
+                    { name: 'Cable Lower Chest Fly (decline)', videoId: 'taI4XduLpTk', sets: '2x10-15' }
+                ]
+            },
+            D: {
+                exercises: [
+                    // Main Lifts
+                    { name: 'Barbell Back Squat', videoId: 'ultWZbUMPL8', sets: '5x5' },
+                    { name: 'Barbell Overhead Press', videoId: 'QAQ64hK4Xxs', sets: '5x5' },
+                    { name: 'Barbell Deadlift', videoId: 'op9kVnSso6Q', sets: '1x5' },
+                    // Back
+                    { name: 'Cable Wide Grip Row', videoId: 'sjJ0z4R3w0M', sets: '3x10-15' },
+                    // Hamstrings
+                    { name: 'Romanian Deadlift', videoId: 'xY8BywOKkLQ', sets: '3x6-8' },
+                    // Glutes
+                    { name: 'Cable Hip Abduction', videoId: 'pwTeBxoOOBQ', sets: '3x15-20' },
+                    // Lower Back
+                    { name: 'Back Extensions', videoId: 'ph3pddpKzzw', sets: '3x10-15' },
+                    // Adductors
+                    { name: 'Copenhagen Planks', videoId: 'aDsaGBnvDQo', sets: '3x20-30s' },
+                    // Core
+                    { name: 'High to Low Cable Woodchoppers', videoId: 'pAplQXk3dkU', sets: '3x10-15' },
+                    { name: 'Palloff Press', videoId: 'AH_QZLm_0-s', sets: '3x8-10' },
+                    { name: 'Weighted Crunches', videoId: 'Yg6GsyZoqK0', sets: '3x10-15' },
+                    { name: 'Serratus Jabs', videoId: 'CEiqDwif3b4&t=263', sets: '2x10-15' }
+                ]
+            },
+            Forearms: {
+                exercises: [
+                    { name: 'Standing Wrist Curls (behind back)', videoId: 'Cj9RNAYD7iY', sets: '3x15-20' },
+                    { name: 'Standing Wrist Extensions with Barbell', videoId: 'yz2eCSWoY4E', sets: '3x15-20' },
+                    { name: 'Reverse Curls (EZ bar)', videoId: 'MOEMvgYzNZQ', sets: '3x8-12' },
+                    { name: 'Wrist Rollers', videoId: 'qb0A0pHGhyA', sets: '1-2x30-60s' },
+                    { name: 'Dumbbell Pronation/Supination', videoId: 'iB_Vw3xIJKM', sets: '2x10' }
+                ]
+            }
+        };
+
+        let currentWorkout = 'A';
+        let timerInterval = null;
+        let remainingTime = 0;
+        let customTime = 120;
+
+        function selectWorkout(workout) {
+            currentWorkout = workout;
+            document.querySelectorAll('.workout-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderExercises();
+        }
+
+        function renderExercises() {
+            const container = document.getElementById('exerciseContainer');
+            container.innerHTML = '';
+            
+            workouts[currentWorkout].exercises.forEach((exercise, index) => {
+                const card = document.createElement('div');
+                card.className = 'exercise-card';
+                card.innerHTML = `
+                    <div class="exercise-header">
+                        <div>
+                            <div class="exercise-name">${exercise.name}</div>
+                            <div style="color: #999; font-size: 0.9em; margin-top: 5px;">${exercise.sets || ''}</div>
+                        </div>
+                        <a href="https://www.youtube.com/watch?v=${exercise.videoId}" target="_blank" class="youtube-btn" style="text-decoration: none; display: inline-block;">
+                            📺 Form
+                        </a>
+                    </div>
+                    <div id="sets-${index}">
+                        <div class="set-input-group">
+                            <div class="input-wrapper">
+                                <label>Weight (lbs)</label>
+                                <input type="number" id="weight-${index}-0" placeholder="0">
+                            </div>
+                            <div class="input-wrapper">
+                                <label>Reps</label>
+                                <input type="number" id="reps-${index}-0" placeholder="0">
+                            </div>
+                            <div class="input-wrapper">
+                                <label>&nbsp;</label>
+                                <button class="timer-btn" onclick="quickTimer()" style="padding: 12px;">⏱️</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-set-btn" onclick="addSet(${index})">+ Add Set</button>
+                    <button class="timer-btn" onclick="saveExercise(${index}, '${exercise.name}')" style="width: 100%; margin-top: 10px;">
+                        Save ${exercise.name}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+            
+            loadLastWorkout();
+        }
+
+        function addSet(exerciseIndex) {
+            const setsContainer = document.getElementById(`sets-${exerciseIndex}`);
+            const setCount = setsContainer.children.length;
+            
+            const setDiv = document.createElement('div');
+            setDiv.className = 'set-input-group';
+            setDiv.innerHTML = `
+                <div class="input-wrapper">
+                    <label>Weight (lbs)</label>
+                    <input type="number" id="weight-${exerciseIndex}-${setCount}" placeholder="0">
+                </div>
+                <div class="input-wrapper">
+                    <label>Reps</label>
+                    <input type="number" id="reps-${exerciseIndex}-${setCount}" placeholder="0">
+                </div>
+                <div class="input-wrapper">
+                    <label>&nbsp;</label>
+                    <button class="timer-btn" onclick="quickTimer()" style="padding: 12px;">⏱️</button>
+                </div>
+            `;
+            setsContainer.appendChild(setDiv);
+        }
+
+        function saveExercise(exerciseIndex, exerciseName) {
+            const setsContainer = document.getElementById(`sets-${exerciseIndex}`);
+            const setCount = setsContainer.children.length;
+            const sets = [];
+            
+            for (let i = 0; i < setCount; i++) {
+                const weight = document.getElementById(`weight-${exerciseIndex}-${i}`).value;
+                const reps = document.getElementById(`reps-${exerciseIndex}-${i}`).value;
+                if (weight && reps) {
+                    sets.push({ weight, reps });
+                }
+            }
+            
+            if (sets.length > 0) {
+                const workout = {
+                    exercise: exerciseName,
+                    workout: currentWorkout,
+                    sets: sets,
+                    date: new Date().toLocaleString()
+                };
+                
+                let history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+                history.unshift(workout);
+                if (history.length > 50) history = history.slice(0, 50);
+                localStorage.setItem('workoutHistory', JSON.stringify(history));
+                
+                alert(`${exerciseName} saved!`);
+                renderHistory();
+            }
+        }
+
+        function loadLastWorkout() {
+            const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+            workouts[currentWorkout].exercises.forEach((exercise, index) => {
+                const lastWorkout = history.find(h => h.exercise === exercise.name && h.workout === currentWorkout);
+                if (lastWorkout && lastWorkout.sets.length > 0) {
+                    const firstSet = lastWorkout.sets[0];
+                    document.getElementById(`weight-${index}-0`).value = firstSet.weight;
+                    document.getElementById(`reps-${index}-0`).value = firstSet.reps;
+                }
+            });
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyContainer');
+            const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<p style="color: #999;">No workout history yet</p>';
+                return;
+            }
+            
+            container.innerHTML = history.slice(0, 10).map((workout, index) => `
+                <div class="history-item">
+                    <strong>${workout.exercise}</strong> (Workout ${workout.workout})<br>
+                    ${workout.sets.map(s => `${s.weight}lbs × ${s.reps}`).join(', ')}<br>
+                    <small style="color: #999;">${workout.date}</small>
+                    <button class="delete-btn" onclick="deleteWorkout(${index})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteWorkout(index) {
+            let history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+            history.splice(index, 1);
+            localStorage.setItem('workoutHistory', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function showVideo(videoId) {
+            const modal = document.getElementById('videoModal');
+            const container = document.getElementById('videoContainer');
+            container.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('videoModal').classList.remove('active');
+            document.getElementById('videoContainer').innerHTML = '';
+        }
+
+        function startTimer(seconds) {
+            if (seconds === customTime) {
+                const input = prompt('Enter rest time in seconds:', '120');
+                if (input) {
+                    customTime = parseInt(input);
+                    seconds = customTime;
+                } else {
+                    return;
+                }
+            }
+            
+            stopTimer();
+            remainingTime = seconds;
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                remainingTime--;
+                updateTimerDisplay();
+                
+                if (remainingTime <= 0) {
+                    stopTimer();
+                    alert('Rest time complete! 💪');
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate([200, 100, 200]);
+                    }
+                }
+            }, 1000);
+        }
+
+        function quickTimer() {
+            startTimer(90);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            remainingTime = 0;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingTime / 60);
+            const seconds = remainingTime % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Initialize
+        renderExercises();
+        renderHistory();
+    </script>
+</body>
+</html>
