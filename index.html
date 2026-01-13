@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Workout">
     <title>Workout Tracker</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -17,6 +21,7 @@
             min-height: 100vh;
             padding: 20px;
             color: #333;
+            padding-bottom: 40px;
         }
 
         .container {
@@ -67,6 +72,8 @@
             padding: 20px;
             margin-bottom: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 100%;
+            overflow: hidden;
         }
 
         .exercise-header {
@@ -91,18 +98,22 @@
             cursor: pointer;
             font-size: 0.9em;
             font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .set-input-group {
             display: grid;
-            grid-template-columns: 1fr 1fr 80px;
-            gap: 10px;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 70px;
+            gap: 8px;
             margin-bottom: 10px;
+            width: 100%;
         }
 
         .input-wrapper {
             display: flex;
             flex-direction: column;
+            min-width: 0;
         }
 
         .input-wrapper label {
@@ -112,11 +123,13 @@
         }
 
         .input-wrapper input {
-            padding: 12px;
+            padding: 10px 8px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 1.1em;
+            font-size: 1em;
             text-align: center;
+            width: 100%;
+            max-width: 100%;
         }
 
         .input-wrapper input:focus {
@@ -204,61 +217,19 @@
             font-size: 0.85em;
             margin-left: 10px;
         }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-        }
-
-        .modal.active {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            max-width: 90%;
-            max-height: 80%;
-        }
-
-        .close-modal {
-            float: right;
-            font-size: 2em;
-            cursor: pointer;
-            color: #666;
-        }
-
-        .modal iframe {
-            width: 100%;
-            height: 315px;
-            border: none;
-            border-radius: 10px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>💪 Workout Tracker</h1>
-
+        
         <div class="workout-selector">
             <h2 style="margin-bottom: 15px;">Select Workout</h2>
             <div class="workout-buttons">
                 <button class="workout-btn active" onclick="selectWorkout('A')">Workout A</button>
                 <button class="workout-btn" onclick="selectWorkout('B')">Workout B</button>
-                <button class="workout-btn" onclick="selectWorkout('C')">Workout C</button>
-                <button class="workout-btn" onclick="selectWorkout('D')">Workout D</button>
-            </div>
-            <div style="margin-top: 10px;">
-                <button class="workout-btn" onclick="selectWorkout('Forearms')" style="width: 100%; background: #ff9800; color: white;">💪 Forearm Work</button>
+                <button class="workout-btn" onclick="selectWorkout('Core')">Core</button>
+                <button class="workout-btn" onclick="selectWorkout('Forearms')">Forearms</button>
             </div>
         </div>
 
@@ -266,11 +237,9 @@
             <h2>Rest Timer</h2>
             <div class="timer-display" id="timerDisplay">0:00</div>
             <div class="timer-buttons">
-                <button class="timer-btn" onclick="startTimer(90)">90s</button>
-                <button class="timer-btn" onclick="startTimer(180)">3min</button>
-                <button class="timer-btn" onclick="startTimer(300)">5min</button>
-            </div>
-            <div class="timer-buttons" style="margin-top: 10px;">
+                <button class="timer-btn" onclick="startTimer(60)">1 min</button>
+                <button class="timer-btn" onclick="startTimer(90)">1.5 min</button>
+                <button class="timer-btn" onclick="startTimer(120)">2 min</button>
                 <button class="timer-btn stop" onclick="stopTimer()">Stop</button>
                 <button class="timer-btn reset" onclick="resetTimer()">Reset</button>
                 <button class="timer-btn" onclick="startTimer(customTime)">Custom</button>
@@ -285,99 +254,33 @@
         </div>
     </div>
 
-    <div class="modal" id="videoModal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <div id="videoContainer"></div>
-        </div>
-    </div>
-
     <script>
         const workouts = {
             A: {
                 exercises: [
-                    // Main Lifts
-                    { name: 'Barbell Back Squat', videoId: 'ultWZbUMPL8', sets: '5x5' },
-                    { name: 'Barbell Bench Press', videoId: 'rT7DgCr-3pg', sets: '5x5' },
-                    { name: 'Barbell Row', videoId: 'FWJR5Ve8bnQ', sets: '5x5' },
-                    // Shoulders
-                    { name: 'Dumbbell Lateral Raises', videoId: '3VcKaXpzqRo', sets: '3x12-15' },
-                    { name: 'Cable Kneeling Face Pulls', videoId: '_L5P--9cFDg', sets: '3x12-15' },
-                    // Rotator Cuff
-                    { name: 'Full Can Exercise (Scaption)', videoId: '-NA8lUy5_Qc&t=160s', sets: '2x12-15' },
-                    { name: 'Cable Internal Rotation', videoId: 'Eh8pu_wUKHU', sets: '2x12-15' },
-                    // Arms
-                    { name: 'Overhead Dumbbell Tricep Extension', videoId: 'YbX7Wd8jQ-Q', sets: '3x10-12' },
-                    { name: 'Narrow Grip EZ Bar Curl', videoId: 'cdmnvo3augg', sets: '3x8-12' },
-                    // Back
-                    { name: 'Cable Kneeling Lat Pulldown', videoId: 'KA0bfBIOxHY&t=17s', sets: '3x10-15' },
-                    // Chest
-                    { name: 'Incline Dumbbell Bench Press', videoId: 'hChjZQhX1Ls', sets: '3x8-12' }
+                    { name: 'Bench Press', videoId: 'rT7DgCr-3pg', sets: '3x4-6' },
+                    { name: 'Incline Cable Flyes', videoId: 'bU23wFufCks', sets: '3x8-12' },
+                    { name: 'DB Preacher Curls', videoId: 'vnfZGzIo6E0', sets: '2x10-15' },
+                    { name: 'Cable Curls', videoId: '1YoTwdLR_u8', sets: '2x12-15' },
+                    { name: 'Overhead Tricep Extensions', videoId: '-Vyt2QdsR7E', sets: '3x8-12' },
+                    { name: 'Cable Tricep Extensions', videoId: 'kiuVA0gs3EI', sets: '2x10-15' }
                 ]
             },
             B: {
                 exercises: [
-                    // Main Lifts
-                    { name: 'Barbell Back Squat', videoId: 'ultWZbUMPL8', sets: '5x5' },
-                    { name: 'Barbell Overhead Press', videoId: 'QAQ64hK4Xxs', sets: '5x5' },
-                    { name: 'Barbell Deadlift', videoId: 'op9kVnSso6Q', sets: '1x5' },
-                    // Traps
-                    { name: 'Barbell Shrugs (wide grip)', videoId: 'g6qbq4Lf1FI', sets: '4x10-12' },
-                    // Calves
-                    { name: 'Standing Calf Raises', videoId: 'gwLzBJYoWlI', sets: '4x12-20' },
-                    { name: 'Seated Calf Raises', videoId: 'JbyjNymZOt0', sets: '3x15-20' },
-                    // Quads
-                    { name: 'Leg Extensions', videoId: 'YyvSfVjQeL0', sets: '3x12-15' },
-                    { name: 'Banded Terminal Knee Extensions', videoId: 'M8u5lbP4f4g&t=263s', sets: '2x15-20' },
-                    // Hamstrings
-                    { name: 'Glute Ham Raise', videoId: '24pK_4kEUsM&t=23s', sets: '3x8-12' },
-                    // Glutes
-                    { name: 'Barbell Hip Thrusts', videoId: 'EF7jXP17DPE', sets: '3x12-15' },
-                    // Core
-                    { name: 'Hanging Knee Raises', videoId: 'Fl8rJJ7mZJM&t=2s', sets: '3x10-15' },
-                    { name: 'Ab Wheel Rollouts', videoId: 'XWJmFD_AdbM', sets: '3x8-12' }
+                    { name: 'Deadlifts', videoId: 'op9kVnSso6Q', sets: '3x4-6' },
+                    { name: 'Pull Ups/Pulldowns', videoId: 'eGo4IYlbE5g', sets: '3x6-10' },
+                    { name: 'Pullovers', videoId: 'qC-hH01yTvA', sets: '3x8-12' },
+                    { name: 'Cable Shoulder Flyes', videoId: '3VcKaXpzqRo', sets: '3x10-12' },
+                    { name: 'Shrugs', videoId: 'cJRVVxmytaM', sets: '3x10-15' },
+                    { name: 'Facepulls', videoId: 'rep-qVOkqgk', sets: '3x12-15' },
+                    { name: 'Bulgarian Split Squats', videoId: '2C-uNgKwPLE', sets: '3x8-10' },
+                    { name: 'Romanian Deadlifts', videoId: 'CQp5I_strLU', sets: '3x8-12' },
+                    { name: 'Calf Raises', videoId: 'gwLzBJYoWlI', sets: '4x10-15' }
                 ]
             },
-            C: {
+            Core: {
                 exercises: [
-                    // Main Lifts
-                    { name: 'Barbell Back Squat', videoId: 'ultWZbUMPL8', sets: '5x5' },
-                    { name: 'Barbell Bench Press', videoId: 'rT7DgCr-3pg', sets: '5x5' },
-                    { name: 'Barbell Row', videoId: 'FWJR5Ve8bnQ', sets: '5x5' },
-                    // Shoulders
-                    { name: 'Cable Rear Delt Fly', videoId: 'FeERX9UwspY', sets: '3x12-15' },
-                    // Rotator Cuff
-                    { name: 'Side-lying External Rotations', videoId: 'jJo1CbgXb_A&t=66s', sets: '3x15-20' },
-                    { name: 'Cable External Rotation Press', videoId: 'mO8YJAxVG2M&t=142s', sets: '2x10-15' },
-                    // Arms
-                    { name: 'Straight Bar Cable Pushdown', videoId: '1FjkhpZsaxc', sets: '3x10-15' },
-                    { name: 'Rope Cable Pushdown', videoId: 'kiuVA0gs3EI', sets: '3x10-15' },
-                    { name: 'Wide Grip Barbell Curl / Preacher Curl', videoId: 'soxrZlIl35U', sets: '3x8-12' },
-                    { name: 'Dumbbell Hammer Curls', videoId: 'P5sXHLmXmBM', sets: '3x10-12' },
-                    // Back
-                    { name: 'Cable Reverse Grip Lat Pulldown', videoId: 'rguA3pm73rs', sets: '3x10-15' },
-                    { name: 'Straight-Arm Cable Pulldown', videoId: 'G9uNaXGTJ4w', sets: '3x12-15' },
-                    // Chest
-                    { name: 'Cable Lower Chest Fly (decline)', videoId: 'taI4XduLpTk', sets: '2x10-15' }
-                ]
-            },
-            D: {
-                exercises: [
-                    // Main Lifts
-                    { name: 'Barbell Back Squat', videoId: 'ultWZbUMPL8', sets: '5x5' },
-                    { name: 'Barbell Overhead Press', videoId: 'QAQ64hK4Xxs', sets: '5x5' },
-                    { name: 'Barbell Deadlift', videoId: 'op9kVnSso6Q', sets: '1x5' },
-                    // Back
-                    { name: 'Cable Wide Grip Row', videoId: 'sjJ0z4R3w0M', sets: '3x10-15' },
-                    // Hamstrings
-                    { name: 'Romanian Deadlift', videoId: 'xY8BywOKkLQ', sets: '3x6-8' },
-                    // Glutes
-                    { name: 'Cable Hip Abduction', videoId: 'pwTeBxoOOBQ', sets: '3x15-20' },
-                    // Lower Back
-                    { name: 'Back Extensions', videoId: 'ph3pddpKzzw', sets: '3x10-15' },
-                    // Adductors
-                    { name: 'Copenhagen Planks', videoId: 'aDsaGBnvDQo', sets: '3x20-30s' },
-                    // Core
                     { name: 'High to Low Cable Woodchoppers', videoId: 'pAplQXk3dkU', sets: '3x10-15' },
                     { name: 'Palloff Press', videoId: 'AH_QZLm_0-s', sets: '3x8-10' },
                     { name: 'Weighted Crunches', videoId: 'Yg6GsyZoqK0', sets: '3x10-15' },
@@ -420,7 +323,7 @@
                             <div class="exercise-name">${exercise.name}</div>
                             <div style="color: #999; font-size: 0.9em; margin-top: 5px;">${exercise.sets || ''}</div>
                         </div>
-                        <a href="https://www.youtube.com/watch?v=${exercise.videoId}" target="_blank" class="youtube-btn" style="text-decoration: none; display: inline-block;">
+                        <a href="https://www.youtube.com/watch?v=${exercise.videoId}" target="_blank" class="youtube-btn">
                             📺 Form
                         </a>
                     </div>
@@ -428,11 +331,11 @@
                         <div class="set-input-group">
                             <div class="input-wrapper">
                                 <label>Weight (lbs)</label>
-                                <input type="number" id="weight-${index}-0" placeholder="0">
+                                <input type="number" id="weight-${index}-0" placeholder="0" inputmode="numeric">
                             </div>
                             <div class="input-wrapper">
                                 <label>Reps</label>
-                                <input type="number" id="reps-${index}-0" placeholder="0">
+                                <input type="number" id="reps-${index}-0" placeholder="0" inputmode="numeric">
                             </div>
                             <div class="input-wrapper">
                                 <label>&nbsp;</label>
@@ -460,11 +363,11 @@
             setDiv.innerHTML = `
                 <div class="input-wrapper">
                     <label>Weight (lbs)</label>
-                    <input type="number" id="weight-${exerciseIndex}-${setCount}" placeholder="0">
+                    <input type="number" id="weight-${exerciseIndex}-${setCount}" placeholder="0" inputmode="numeric">
                 </div>
                 <div class="input-wrapper">
                     <label>Reps</label>
-                    <input type="number" id="reps-${exerciseIndex}-${setCount}" placeholder="0">
+                    <input type="number" id="reps-${exerciseIndex}-${setCount}" placeholder="0" inputmode="numeric">
                 </div>
                 <div class="input-wrapper">
                     <label>&nbsp;</label>
@@ -541,18 +444,6 @@
             history.splice(index, 1);
             localStorage.setItem('workoutHistory', JSON.stringify(history));
             renderHistory();
-        }
-
-        function showVideo(videoId) {
-            const modal = document.getElementById('videoModal');
-            const container = document.getElementById('videoContainer');
-            container.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-            modal.classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('videoModal').classList.remove('active');
-            document.getElementById('videoContainer').innerHTML = '';
         }
 
         function startTimer(seconds) {
