@@ -77,10 +77,14 @@
         }
 
         .exercise-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            position: relative; /* Add this */
             margin-bottom: 15px;
+            padding-right: 90px; /* Make room for the button */
+            min-height: 40px; /* Ensure minimum height for button */
+        }
+
+        .exercise-header > div:first-child {
+            /* Name container - no flex needed now */
         }
 
         .exercise-name {
@@ -90,6 +94,9 @@
         }
 
         .youtube-btn {
+            position: absolute; /* Position button absolutely */
+            top: 0;
+            right: 0;
             background: #ff0000;
             color: white;
             border: none;
@@ -100,6 +107,7 @@
             font-weight: bold;
             text-decoration: none;
             display: inline-block;
+            white-space: nowrap;
         }
 
         .set-input-group {
