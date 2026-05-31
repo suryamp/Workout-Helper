@@ -1,0 +1,20 @@
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0a0a0f;
+  --surface:#13131a;
+  --surface2:#1c1c27;
+  --surface3:#242435;
+  --accent:#c8f043;
+  --accent2:#7b6ff0;
+  --ss:#f04370;
+  --text:#f0f0f5;
+  --text2:#9090aa;
+  --text3:#5a5a70;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.13);
+  --r:12px;
+  --rl:18px;
+}
+body{font-family:'DM Mono','Fira Mono','Courier New',monospace;background:var(--bg);min-height:100vh;color:var(--text);}
+
+

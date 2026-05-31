@@ -1,0 +1,15 @@
+/* ══════════════════════════════════════════
+   animations.css
+   Keyframes and motion utilities.
+   This layer owns ALL @keyframes.
+   components.css references them by name but never defines them.
+   Add new @keyframes here as the app grows.
+══════════════════════════════════════════ */
+
+/* FIX #12: moved here from components.css where it was misplaced.
+   The layer contract is: tokens → layout → components → animations.
+   Keyframes belong in animations.css; component rules reference them. */
+@keyframes saved-flash {
+  0%   { background: rgba(200,240,67,.12); }
+  100% { background: var(--surface); }
+}
