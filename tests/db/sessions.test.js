@@ -11,6 +11,7 @@ import {
   getCompletedSessions,
 } from '../../src/db/sessions.js';
 import { getHistory, getSessionDetails } from '../../src/db/logs.js';
+import { getLog }                        from '../../src/telemetry.js';
 import { getLogicalDay, endOfLogicalDay } from '../../src/utils/time.js';
 
 // Pull session-level functions under test via session.js (business logic layer)
@@ -166,6 +167,38 @@ describe('reconcileStaleSessions', () => {
     const completed = await getCompletedSessions();
     const reconciled = completed.find(s => s.logicalDay === oldLogDay);
     expect(reconciled.completedAt).toBe(endOfLogicalDay(twoDaysAgo));
+  });
+});
+
+describe('behavioral telemetry events', () => {
+  test('session_started is captured by maybeStartSession', async () => {
+    await maybeStartSession('heavy-a');
+    const log = getLog();
+    expect(log.some(e => e.event === 'session_started' && e.data.day === 'heavy-a')).toBe(true);
+  });
+
+  test('session_completed is captured with duration and counts', async () => {
+    await maybeStartSession('heavy-a');
+    stageSetLog('heavy-a', {
+      exerciseKey: 'barbell_bench_press', exerciseName: 'Barbell Bench Press',
+      uid: 'heavy-a-0-0', sets: [{ weight: '150', reps: '10' }, { weight: '150', reps: '10' }],
+    });
+    await sessionCompleteSession('heavy-a');
+    const log = getLog();
+    const ev  = log.find(e => e.event === 'session_completed');
+    expect(ev).toBeDefined();
+    expect(ev.data.day).toBe('heavy-a');
+    expect(ev.data.setCount).toBe(2);
+    expect(ev.data.exerciseCount).toBe(1);
+    expect(typeof ev.data.durationMins).toBe('number');
+  });
+
+  test('session_abandoned is captured by abandonSession', async () => {
+    await maybeStartSession('heavy-a');
+    const { abandonSession: stateAbandon } = await import('../../src/state/session.js');
+    await stateAbandon('heavy-a');
+    const log = getLog();
+    expect(log.some(e => e.event === 'session_abandoned' && e.data.day === 'heavy-a')).toBe(true);
   });
 });
 
