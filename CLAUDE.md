@@ -24,7 +24,7 @@ IndexedDB requires an HTTP origin — do not open `index.html` directly via `fil
 
 ## Architecture in one paragraph
 
-`src/main.js` is the sole entry point. It boots the app, wires all globals, and is the only file that touches `window.*`. Rendering is done by `src/ui/render.js`, which writes `innerHTML` strings. In-memory set state lives in `src/state/setWidget.js`. Session lifecycle (start/complete/abandon/reconcile) lives in `src/state/session.js`. Persistence is handled entirely by `src/db/index.js` (IndexedDB, schema v1). Pure data — no logic — lives in `src/data/exercises.js` and `src/data/days.js`. Time math (logical day boundary) lives in `src/utils/time.js` and is imported wherever needed — never duplicated.
+`src/main.js` is the sole entry point. It boots the app, wires all globals, and is the only file that touches `window.*`. Rendering is done by `src/ui/render.js`, which writes `innerHTML` strings. In-memory set state lives in `src/state/setWidget.js`. Session lifecycle (start/complete/abandon/reconcile) lives in `src/state/session.js`. Persistence is split across three sub-modules under `src/db/`: `connection.js` (IDB singleton, schema, low-level helpers), `sessions.js` (staging buffer, session CRUD, atomic flush), and `logs.js` (progression queries, history). `src/db/index.js` is a barrel that re-exports the full public API — all callers outside `db/` import from there. Pure data — no logic — lives in `src/data/exercises.js` and `src/data/days.js`. Time math (logical day boundary) lives in `src/utils/time.js` and is imported wherever needed — never duplicated.
 
 ---
 
@@ -49,7 +49,7 @@ Each CSS file may only reference variables defined in a previous layer. `animati
 `nav.js → setActiveTab` matches tabs via `tab.dataset.page`. Every nav `<button>` in `index.html` must have a `data-page="<day-id>"` attribute matching the corresponding `showPage(id)` call. A missing or mismatched attribute causes silent failure.
 
 ### 7. IDB schema — never modify the v1 block
-`SCHEMA_VER = 1` in `src/db/index.js`. To add a store or index: bump to `2`, add an `if (event.oldVersion < 2) { ... }` block *below* the v1 block. Never edit the v1 block — existing users must only run the delta.
+`SCHEMA_VER = 1` in `src/db/connection.js`. To add a store or index: bump to `2`, add an `if (event.oldVersion < 2) { ... }` block *below* the v1 block. Never edit the v1 block — existing users must only run the delta.
 
 ---
 
@@ -60,7 +60,10 @@ Each CSS file may only reference variables defined in a previous layer. `animati
 | `src/main.js` | Boot sequence, `saveAndAdvance`/`advanceDay`/`goBack`/`restartDay`, all `window.*` exports |
 | `src/data/exercises.js` | `EXERCISES` constant — pure data, no imports |
 | `src/data/days.js` | `DAYS`, `DAY_ROTATION`, `DAY_LABELS` — pure data, no imports |
-| `src/db/index.js` | All IndexedDB reads/writes, schema, set-log staging |
+| `src/db/index.js` | Public API barrel — re-exports from the three sub-modules below |
+| `src/db/connection.js` | IDB singleton, schema v1, seeding, `_idbWrite`/`_promisify`/`_requireDB`, store name constants |
+| `src/db/sessions.js` | `_pending` buffer, `stageSetLog`, `abandonSession`, `completeSession` (atomic flush), active/completed session CRUD |
+| `src/db/logs.js` | `getProgressionData`, `getHistory`, `deleteHistoryEntry`, streak computation |
 | `src/utils/time.js` | `getLogicalDay`, `endOfLogicalDay` — pure functions, no imports |
 | `src/state/session.js` | Session start/complete/abandon/reconcile/next-day rotation. No DOM access. |
 | `src/state/setWidget.js` | `_state` map, `initSetState`, `tapPill`, `lockNextSet`, `renderSetWidget` |
