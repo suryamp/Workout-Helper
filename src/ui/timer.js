@@ -12,7 +12,6 @@ let _interval      = null;
 let _timerEnd      = null;
 let _remaining     = 0;
 let _customSec     = 120;
-let _presetsVisible = false;
 
 // Two-phase timer state.
 // Phase 1 (green): the easy rest window.
@@ -44,7 +43,7 @@ export function startTimer(sec, overtimeSec = 0) {
   _interval = setInterval(_tick, 500);
 }
 
-export function stopTimer() {
+function stopTimer() {
   if (_interval) { clearInterval(_interval); _interval = null; }
 }
 
@@ -78,15 +77,6 @@ function _updateAllTimers() {
   document.querySelectorAll('.timer-display').forEach(el => {
     el.textContent = txt;
     el.className   = 'timer-display' + mod;
-  });
-}
-
-// ── Preset visibility ───────────────────
-
-export function toggleTimerPresets() {
-  _presetsVisible = !_presetsVisible;
-  document.querySelectorAll('.timer-presets-wrap').forEach(el => {
-    el.classList.toggle('hidden', !_presetsVisible);
   });
 }
 

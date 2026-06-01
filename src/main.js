@@ -23,7 +23,7 @@ import {
   reconcileStaleSessions,
   getNextDay,
 }                                        from './state/session.js';
-import { getState, clearDayState }       from './state/setWidget.js';
+import { getState }                       from './state/setWidget.js';
 import {
   getVirtualIdx,
   setVirtualIdx,

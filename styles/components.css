@@ -102,8 +102,6 @@
 
 /* HISTORY — session cards */
 .hist-day{display:inline-block;font-size:14px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent2);background:rgba(123,111,240,.12);border:1px solid rgba(123,111,240,.2);border-radius:6px;padding:2px 7px;}
-.del-btn{background:none;border:1px solid rgba(240,67,112,.25);border-radius:6px;color:rgba(240,67,112,.6);font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;}
-.del-btn:hover{background:rgba(240,67,112,.1);color:var(--ss);}
 .empty{font-size:13px;color:var(--text3);text-align:center;padding:40px 0;}
 
 .session-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:10px;position:relative;overflow:hidden;}
@@ -150,7 +148,6 @@
 .done-animal::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(123,111,240,.2) 0%,transparent 70%);pointer-events:none;}
 .done-actions{display:flex;flex-direction:row;justify-content:center;gap:10px;margin-top:20px;}
 .share-btn-done{font-size:13px;padding:10px 24px;background:var(--accent);border-color:transparent;color:#0a0a0f;border-radius:10px;}
-.restart-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:12px 24px;cursor:pointer;}
 
 /* Level-up summary card on done screen */
 .levelup-summary{margin-top:24px;text-align:left;background:linear-gradient(135deg,#0f1f0f,#111a0e,#0d1a12);border-color:rgba(200,240,67,.35);}
