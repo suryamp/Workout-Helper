@@ -33,7 +33,12 @@ export async function getProgressionData(exerciseKey) {
   // Fetch enough entries to evaluate the streak.
   const FETCH_LIMIT = Math.max(10, cfg.successesNeeded + 5);
   const entries     = await _getRecentLogs(db, exerciseKey, FETCH_LIMIT);
-  if (entries.length === 0) return FALLBACK;
+  if (entries.length === 0) {
+    // No real history yet — seed the suggested weight from the exercise definition
+    // so the weight chip is pre-filled on a fresh install.
+    const w = ex.defaultWeight;
+    return { suggestedWeight: w || null, badge: w ? `${w} lbs` : null, levelUp: false };
+  }
 
   const lastWeight = _sessionWeight(entries[0]);
   const targetReps = cfg.targetReps;
