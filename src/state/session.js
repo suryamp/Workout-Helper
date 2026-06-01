@@ -5,6 +5,7 @@
 // ══════════════════════════════════════════
 
 import { getLogicalDay, endOfLogicalDay } from '../utils/time.js';
+import { capture, Events }                from '../telemetry.js';
 import { DAY_ROTATION }                   from '../data/days.js';
 import {
   getActiveSessions,
@@ -28,6 +29,7 @@ export async function maybeStartSession(day) {
   const logicalDay = getLogicalDay();
   if (sessions[logicalDay]) return;
   await putActiveSession({ logicalDay, day, startedAt: Date.now(), completedAt: null });
+  capture(Events.SESSION_STARTED, { day });
 }
 
 // ── Session complete ────────────────────
@@ -59,6 +61,7 @@ export async function abandonSession(day) {
   dbAbandonSession(day);              // clears the in-memory pending buffer
   const logicalDay = getLogicalDay();
   await deleteActiveSession(logicalDay);
+  capture(Events.SESSION_ABANDONED, { day });
 }
 
 // ── Stale-session reconciliation ────────

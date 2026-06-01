@@ -25,6 +25,10 @@ export const Events = Object.freeze({
   SESSION_BACKUP:     'session_backup',
   SESSION_RECOVERED:  'session_recovered',
   RECOVERY_FAILED:    'recovery_failed',
+  SESSION_STARTED:    'session_started',
+  SESSION_COMPLETED:  'session_completed',
+  SESSION_ABANDONED:  'session_abandoned',
+  LEVEL_UP:           'level_up',
 });
 
 /**

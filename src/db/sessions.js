@@ -159,7 +159,20 @@ export async function completeSession(day, session) {
     const results        = await Promise.all(uniqueKeys.map(k => getProgressionData(k)));
     const progressionMap = Object.fromEntries(uniqueKeys.map((k, i) => [k, results[i]]));
     await _idbWrite(db, STORE_COMPLETED, store => store.put({ ...session, progressionMap }));
-  } catch { /* non-fatal — getSessionDetails falls back gracefully */ }
+
+    for (const [key, prog] of Object.entries(progressionMap)) {
+      if (prog.levelUp) {
+        capture(Events.LEVEL_UP, { exerciseKey: key, prevWeight: prog.prevWeight, newWeight: prog.suggestedWeight });
+      }
+    }
+  } catch { /* non-fatal */ }
+
+  capture(Events.SESSION_COMPLETED, {
+    day:           session.day,
+    durationMins:  Math.round((session.completedAt - session.startedAt) / 60000),
+    exerciseCount: new Set(toFlush.map(e => e.exerciseKey)).size,
+    setCount:      toFlush.reduce((sum, e) => sum + e.sets.length, 0),
+  });
 }
 
 // ─── Active sessions ─────────────────────────────────────────────────────────
