@@ -13,6 +13,30 @@ import { completeSession }               from '../state/session.js';
 import { REST_DEFAULTS }                 from '../ui/timer.js';
 import { buildShareText }                from '../ui/share.js';
 
+// ── Done-screen messages (rotated by session count) ─────────────────────────
+const DONE_MESSAGES = [
+  'Somewhere a couch is very disappointed in you',
+  'Your excuses called and you didn\'t answer',
+  'Your rest day just got a little more earned',
+  'Another day the weights lost',
+  'Weakness had the day off. You didn\'t.',
+  'Gravity fought back. Gravity lost.',
+  'That\'s not sweat: that\'s liquid discipline',
+  'Every rep was a tiny argument you won',
+  'You could\'ve done less. You didn\'t.',
+  'Momentum looks exactly like what you just did',
+  'Hard sets grind soft excuses into dust',
+  'Half a workout beats a full rest day every time',
+  'Your body asked to stop. You had a different opinion.',
+  'Effort like that doesn\'t go unnoticed — especially by you.',
+  'You traded comfort for progress. Good deal.',
+  'Today\'s discomfort is tomorrow\'s baseline.',
+  'Future you is already smug about this.',
+  'Turns out future you was worth it.',
+  'Somewhere, the version of you that skipped is having a worse day',
+  'Comfort zones don\'t expand themselves',
+];
+
 // ── Carousel index ──────────────────────
 const _carouselIdx = {};
 export function getVirtualIdx(day)    { return _carouselIdx[day] ?? -1; }
@@ -232,7 +256,7 @@ export async function renderDay(day) {
 
     html += `<div class="day-done">
       <div class="done-big">🎉</div>
-      <div class="done-msg">${data.label} complete!<br>You showed up. That's the job.</div>
+      <div class="done-msg">${data.label} complete!<br>${DONE_MESSAGES[allCompleted.length % DONE_MESSAGES.length]}</div>
       ${volStr}
       ${levelUpHTML}
       <div class="done-actions">

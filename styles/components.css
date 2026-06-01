@@ -102,7 +102,7 @@
 
 
 /* HISTORY — session cards */
-.hist-day{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent2);background:rgba(123,111,240,.12);border:1px solid rgba(123,111,240,.2);border-radius:6px;padding:2px 7px;}
+.hist-day{display:inline-block;font-size:14px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent2);background:rgba(123,111,240,.12);border:1px solid rgba(123,111,240,.2);border-radius:6px;padding:2px 7px;}
 .del-btn{background:none;border:1px solid rgba(240,67,112,.25);border-radius:6px;color:rgba(240,67,112,.6);font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;}
 .del-btn:hover{background:rgba(240,67,112,.1);color:var(--ss);}
 .empty{font-size:13px;color:var(--text3);text-align:center;padding:40px 0;}
@@ -110,11 +110,11 @@
 .session-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:10px;position:relative;overflow:hidden;}
 .session-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),transparent);}
 .session-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;}
-.session-header-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.session-header-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:4px;}
 .session-header-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .session-volume{font-size:13px;font-weight:700;color:var(--accent);}
-.session-date{font-size:11px;color:var(--text3);white-space:nowrap;}
-.del-icon-btn{background:rgba(240,67,112,.1);border:1px solid rgba(240,67,112,.22);border-radius:8px;color:var(--ss);padding:2px 7px 3px;cursor:pointer;font-size:14px;line-height:1;transition:background .15s;}
+.session-date{font-size:14px;color:var(--text);white-space:nowrap;}
+.del-icon-btn{background:rgba(240,67,112,.1);border:1px solid rgba(240,67,112,.22);border-radius:8px;color:var(--ss);padding:7px;cursor:pointer;font-size:14px;line-height:1;transition:background .15s;}
 .del-icon-btn:hover{background:rgba(240,67,112,.2);}
 .session-exercises{border-top:1px solid var(--border);padding-top:10px;margin-bottom:12px;}
 .session-ex-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;gap:8px;}
