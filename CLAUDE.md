@@ -35,7 +35,7 @@ Tests live in `tests/` mirroring the `src/` structure. Always run `npm run test:
 
 ## Architecture in one paragraph
 
-`src/main.js` is the sole entry point. It boots the app, wires all globals, and is the only file that touches `window.*`. Rendering is done by `src/ui/render.js`, which writes `innerHTML` strings. In-memory set state lives in `src/state/setWidget.js`. Session lifecycle (start/complete/abandon/reconcile) lives in `src/state/session.js`. Persistence is split across three sub-modules under `src/db/`: `connection.js` (IDB singleton, schema, low-level helpers), `sessions.js` (staging buffer, session CRUD, atomic flush), and `logs.js` (progression queries, history). `src/db/index.js` is a barrel that re-exports the full public API — all callers outside `db/` import from there. Pure data — no logic — lives in `src/data/exercises.js` and `src/data/days.js`. Time math (logical day boundary) lives in `src/utils/time.js` and is imported wherever needed — never duplicated.
+`src/main.js` is the sole entry point. It boots the app, wires all globals, and is the only file that touches `window.*`. Rendering is done by `src/ui/render.js`, which writes `innerHTML` strings. In-memory set state lives in `src/state/setWidget.js`. Session lifecycle (start/complete/abandon/reconcile) lives in `src/state/session.js`. Persistence is split across three sub-modules under `src/db/`: `connection.js` (IDB singleton, schema, low-level helpers), `sessions.js` (staging buffer, session CRUD, atomic flush + progression snapshot), and `logs.js` (progression queries, history, session details). `src/db/index.js` is a barrel that re-exports the full public API — all callers outside `db/` import from there. Pure data — no logic — lives in `src/data/exercises.js`, `src/data/days.js`, and `src/data/volumeAnimals.js`. Time math (logical day boundary) lives in `src/utils/time.js` and is imported wherever needed — never duplicated. Share-text generation lives in `src/ui/share.js`; the session detail bottom sheet lives in `src/ui/sessionDetail.js`.
 
 ---
 
@@ -59,8 +59,8 @@ Each CSS file may only reference variables defined in a previous layer. `animati
 ### 6. `data-page` attributes must stay in sync with page IDs
 `nav.js → setActiveTab` matches tabs via `tab.dataset.page`. Every nav `<button>` in `index.html` must have a `data-page="<day-id>"` attribute matching the corresponding `showPage(id)` call. A missing or mismatched attribute causes silent failure.
 
-### 7. IDB schema — never modify the v1 block
-`SCHEMA_VER = 1` in `src/db/connection.js`. To add a store or index: bump to `2`, add an `if (event.oldVersion < 2) { ... }` block *below* the v1 block. Never edit the v1 block — existing users must only run the delta.
+### 7. IDB schema — never modify existing version blocks
+`SCHEMA_VER = 2` in `src/db/connection.js`. To add a store or index: bump to `3`, add an `if (event.oldVersion < 3) { ... }` block *below* the v2 block. Never edit the v1 or v2 blocks — existing users must only run the delta.
 
 ---
 
@@ -71,16 +71,19 @@ Each CSS file may only reference variables defined in a previous layer. `animati
 | `src/main.js` | Boot sequence, `saveAndAdvance`/`advanceDay`/`goBack`/`restartDay`, all `window.*` exports |
 | `src/data/exercises.js` | `EXERCISES` constant — pure data, no imports |
 | `src/data/days.js` | `DAYS`, `DAY_ROTATION`, `DAY_LABELS` — pure data, no imports |
+| `src/data/volumeAnimals.js` | `VOLUME_ANIMALS` table, `getVolumeAnimal(lbs)` — pure data, no imports |
 | `src/db/index.js` | Public API barrel — re-exports from the three sub-modules below |
-| `src/db/connection.js` | IDB singleton, schema v1, seeding, `_idbWrite`/`_promisify`/`_requireDB`, store name constants |
-| `src/db/sessions.js` | `_pending` buffer, `stageSetLog`, `abandonSession`, `completeSession` (atomic flush), active/completed session CRUD |
-| `src/db/logs.js` | `getProgressionData`, `getHistory`, `deleteHistoryEntry`, streak computation |
+| `src/db/connection.js` | IDB singleton, schema v1+v2, seeding, `_idbWrite`/`_promisify`/`_requireDB`, store name constants |
+| `src/db/sessions.js` | `_pending` buffer, `stageSetLog`, `abandonSession`, `completeSession` (atomic flush + progression snapshot), active/completed session CRUD |
+| `src/db/logs.js` | `getProgressionData`, `getHistory`, `getSessionDetails`, `deleteHistoryEntry`, `computeVolume`, streak computation |
 | `src/utils/time.js` | `getLogicalDay`, `endOfLogicalDay` — pure functions, no imports |
 | `src/state/session.js` | Session start/complete/abandon/reconcile/next-day rotation. No DOM access. |
 | `src/state/setWidget.js` | `_state` map, `initSetState`, `tapPill`, `_lockPill` (debounce callback), `clearDayState`, `renderSetWidget` |
 | `src/ui/render.js` | `renderDay`, `buildSlide`, `exCardInner`, `warmupSlide`, `timerHTML`, `minsRemaining` |
-| `src/ui/timer.js` | Countdown, `startTimer(sec, overtimeSec)`/`stopTimer`, two-phase timer logic, `getSmartTimer`, `customTimer`, `toggleTimerPresets` |
-| `src/ui/modals.js` | Weight modal, custom timer modal, restart modal — DOM only, no business logic |
+| `src/ui/timer.js` | Countdown, `startTimer(sec, overtimeSec)`, two-phase timer logic, `getSmartTimer`, `customTimer` |
+| `src/ui/share.js` | `buildShareText`, `shareText` — Wordle-style share snippet builder and native share/clipboard helper |
+| `src/ui/sessionDetail.js` | `openSessionDetail`, `closeSessionDetail` — bottom sheet with per-set analytics, swipe-to-dismiss |
+| `src/ui/modals.js` | Weight modal, custom timer modal — DOM only, no business logic |
 | `src/ui/history.js` | `renderHistory`, `deleteEntry` |
 | `src/ui/nav.js` | `showPage`, `setActiveTab` |
 
