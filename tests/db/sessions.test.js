@@ -10,7 +10,7 @@ import {
   deleteActiveSession,
   getCompletedSessions,
 } from '../../src/db/sessions.js';
-import { getHistory } from '../../src/db/logs.js';
+import { getHistory, getSessionDetails } from '../../src/db/logs.js';
 import { getLogicalDay, endOfLogicalDay } from '../../src/utils/time.js';
 
 // Pull session-level functions under test via session.js (business logic layer)
@@ -166,6 +166,52 @@ describe('reconcileStaleSessions', () => {
     const completed = await getCompletedSessions();
     const reconciled = completed.find(s => s.logicalDay === oldLogDay);
     expect(reconciled.completedAt).toBe(endOfLogicalDay(twoDaysAgo));
+  });
+});
+
+describe('progressionMap snapshot on completeSession', () => {
+  test('session record has progressionMap after completeSession', async () => {
+    const day     = 'heavy-a';
+    const session = { logicalDay: getLogicalDay(), day, startedAt: Date.now() - 1000, completedAt: Date.now() };
+
+    stageSetLog(day, {
+      exerciseKey:  'barbell_bench_press',
+      exerciseName: 'Barbell Bench Press',
+      uid:          `${day}-0-0`,
+      sets:         [{ weight: '150', reps: '10' }],
+    });
+
+    await putActiveSession({ ...session, completedAt: null });
+    await completeSession(day, session);
+
+    const completed = await getCompletedSessions();
+    const saved = completed.find(s => s.startedAt === session.startedAt);
+    expect(saved.progressionMap).toBeDefined();
+    expect(saved.progressionMap['barbell_bench_press']).toBeDefined();
+  });
+
+  test('getSessionDetails reads levelUp from progressionMap, not live recomputation', async () => {
+    const day     = 'heavy-a';
+    const session = { logicalDay: getLogicalDay(), day, startedAt: Date.now() - 1000, completedAt: Date.now() };
+
+    stageSetLog(day, {
+      exerciseKey:  'barbell_bench_press',
+      exerciseName: 'Barbell Bench Press',
+      uid:          `${day}-0-0`,
+      sets:         [{ weight: '150', reps: '10' }],
+    });
+
+    await putActiveSession({ ...session, completedAt: null });
+    await completeSession(day, session);
+
+    const details = await getSessionDetails(session.startedAt);
+    const ex      = details.exercises.find(e => e.exerciseKey === 'barbell_bench_press');
+
+    const completed = await getCompletedSessions();
+    const saved     = completed.find(s => s.startedAt === session.startedAt);
+
+    expect(ex.levelUp).toBe(saved.progressionMap['barbell_bench_press'].levelUp);
+    expect(ex.streak).toBe(saved.progressionMap['barbell_bench_press'].streak);
   });
 });
 

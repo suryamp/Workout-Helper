@@ -22,17 +22,14 @@ import { STORE_LOGS, STORE_COMPLETED, _requireDB, _idbWrite, _promisify } from '
  * }>}
  */
 export async function getProgressionData(exerciseKey) {
-  const FALLBACK = { suggestedWeight: null, badge: null, levelUp: false, streak: 0, streakNeeded: null };
-
   const ex = EXERCISES[exerciseKey];
-  if (!ex?.progression) return FALLBACK;
+  if (!ex?.progression) return { suggestedWeight: null, badge: null, levelUp: false, streak: 0, streakNeeded: null };
 
   const db  = _requireDB();
   const cfg = ex.progression;
-
-  // Fetch enough entries to evaluate the streak.
   const FETCH_LIMIT = Math.max(10, cfg.successesNeeded + 5);
   const entries     = await _getRecentLogs(db, exerciseKey, FETCH_LIMIT);
+
   if (entries.length === 0) {
     // No real history yet — seed the suggested weight from the exercise definition
     // so the weight chip is pre-filled on a fresh install.
@@ -40,6 +37,11 @@ export async function getProgressionData(exerciseKey) {
     return { suggestedWeight: w || null, badge: w ? `${w} lbs` : null, levelUp: false, streak: 0, streakNeeded: cfg.successesNeeded };
   }
 
+  return _progressionFromEntries(ex, entries);
+}
+
+function _progressionFromEntries(ex, entries) {
+  const cfg        = ex.progression;
   const lastWeight = _sessionWeight(entries[0]);
   const targetReps = cfg.targetReps;
 
@@ -258,8 +260,8 @@ export async function getSessionDetails(startedAt) {
   const prevLogMap = {};
   for (const log of prevLogs) prevLogMap[log.exerciseKey] = log;
 
-  const progDataList = await Promise.all(
-    currentLogs.map(l => getProgressionData(l.exerciseKey))
+  const progDataList = currentLogs.map(l =>
+    thisSession.progressionMap?.[l.exerciseKey] ?? { suggestedWeight: null, badge: null, levelUp: false, streak: 0, streakNeeded: null }
   );
 
   const exercises = currentLogs.map((log, i) => {
@@ -328,7 +330,6 @@ function _getRecentLogs(db, exerciseKey, limit) {
   return new Promise((resolve, reject) => {
     const txn   = db.transaction(STORE_LOGS, 'readonly');
     const index = txn.objectStore(STORE_LOGS).index('by_exercise_date');
-
     // IDB compound key range for a single exerciseKey: bound on first component only.
     // Lower bound: [exerciseKey, ""] (empty string sorts before any ISO date)
     // Upper bound: [exerciseKey, "￿"] (high surrogate sorts after any date)
@@ -336,10 +337,8 @@ function _getRecentLogs(db, exerciseKey, limit) {
       [exerciseKey, ''],
       [exerciseKey, '￿']
     );
-
     const results = [];
     const req     = index.openCursor(range, 'prev');
-
     req.onsuccess = (e) => {
       const cursor = e.target.result;
       if (!cursor || results.length >= limit) return resolve(results);
@@ -348,7 +347,6 @@ function _getRecentLogs(db, exerciseKey, limit) {
       if (!entry.seeded) results.push(entry);
       cursor.continue();
     };
-
     req.onerror = () => reject(req.error);
   });
 }

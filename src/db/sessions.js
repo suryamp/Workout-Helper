@@ -19,6 +19,7 @@ import {
   _idbWrite,
   _promisify,
 } from './connection.js';
+import { getProgressionData } from './logs.js';
 
 // ─── In-session accumulation ─────────────────────────────────────────────────
 
@@ -150,6 +151,15 @@ export async function completeSession(day, session) {
     } catch { /* localStorage also unavailable — nothing we can do */ }
     throw err;
   });
+
+  // Snapshot progression state onto the session record so getSessionDetails
+  // can read it directly without re-querying history.
+  try {
+    const uniqueKeys     = [...new Set(toFlush.map(e => e.exerciseKey))];
+    const results        = await Promise.all(uniqueKeys.map(k => getProgressionData(k)));
+    const progressionMap = Object.fromEntries(uniqueKeys.map((k, i) => [k, results[i]]));
+    await _idbWrite(db, STORE_COMPLETED, store => store.put({ ...session, progressionMap }));
+  } catch { /* non-fatal — getSessionDetails falls back gracefully */ }
 }
 
 // ─── Active sessions ─────────────────────────────────────────────────────────
