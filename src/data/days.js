@@ -11,8 +11,8 @@ export const DAY_ROTATION = ['heavy-a', 'acc-a', 'heavy-b', 'acc-b'];
 export const DAY_LABELS = {
   'heavy-a': 'Heavy A',
   'heavy-b': 'Heavy B',
-  'acc-a':   'Acc A',
-  'acc-b':   'Acc B',
+  'acc-a':   'Accessory A',
+  'acc-b':   'Accessory B',
 };
 
 /**
@@ -46,7 +46,7 @@ export const DAYS = {
     ],
   },
   'acc-a': {
-    label: 'Acc A', warmup: false,
+    label: 'Accessory A', warmup: false,
     steps: [
       ['cable_wide_grip_row', 'cable_straight_arm_pulldown'],
       'cable_kneeling_lat_pulldown',
@@ -60,7 +60,7 @@ export const DAYS = {
     ],
   },
   'acc-b': {
-    label: 'Acc B', warmup: false,
+    label: 'Accessory B', warmup: false,
     steps: [
       ['cable_kneeling_face_pulls', 'cable_y_raises'],
       'cable_reverse_grip_lat_pulldown',

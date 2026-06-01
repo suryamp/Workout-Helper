@@ -23,7 +23,7 @@ export async function showPage(id, _event) {
 
   if (id === 'home') {
     if (backBtn) backBtn.style.visibility = 'hidden';
-    if (titleEl) titleEl.textContent = 'Workout Tracker';
+    if (titleEl) titleEl.textContent = 'Workout Tracker 💪';
   } else {
     if (backBtn) backBtn.style.visibility = '';
     if (titleEl) titleEl.textContent = DAY_LABELS[id] ?? _PAGE_TITLES[id] ?? '';

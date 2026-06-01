@@ -163,7 +163,7 @@ export const EXERCISES = {
     estMinutes: 4, defaultWeight: 20,
   },
   reverse_curls_ez_bar: {
-    displayName:  'Reverse Curls (EZ Bar)',
+    displayName:  'EZ Bar Reverse Curls',
     sets: 3, reps: 8,
     video: 'MOEMvgYzNZQ', notes: '',
     progression: { increment: 2.5, successesNeeded: 3, targetReps: 8 },
