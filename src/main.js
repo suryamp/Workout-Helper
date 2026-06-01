@@ -46,6 +46,7 @@ import {
 }                                        from './ui/modals.js';
 import { tapPill }                              from './state/setWidget.js';
 import { deleteSession, shareSession }         from './ui/history.js';
+import { openSessionDetail, closeSessionDetail } from './ui/sessionDetail.js';
 import { showPage, setActiveTab }              from './ui/nav.js';
 import { shareText, buildShareText }           from './ui/share.js';
 
@@ -70,10 +71,11 @@ async function saveAndAdvance(day) {
     if (sets.length === 0) return;
 
     stageSetLog(day, {
-      exerciseKey:  key,
-      exerciseName: EXERCISES[key]?.displayName ?? key,
+      exerciseKey:     key,
+      exerciseName:    EXERCISES[key]?.displayName ?? key,
       uid,
       sets,
+      suggestedWeight: s.suggestedWeight ?? null,
     });
   });
 
@@ -191,6 +193,8 @@ Object.assign(window, {
   // History + share
   deleteSession,
   shareSession,
+  openSessionDetail,
+  closeSessionDetail,
   shareDoneScreen: async (encodedPayload) => {
     const { session, logs, levelUps } = JSON.parse(decodeURIComponent(encodedPayload));
     const text   = buildShareText(session, logs, levelUps);

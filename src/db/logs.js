@@ -22,7 +22,7 @@ import { STORE_LOGS, STORE_COMPLETED, _requireDB, _idbWrite, _promisify } from '
  * }>}
  */
 export async function getProgressionData(exerciseKey) {
-  const FALLBACK = { suggestedWeight: null, badge: null, levelUp: false };
+  const FALLBACK = { suggestedWeight: null, badge: null, levelUp: false, streak: 0, streakNeeded: null };
 
   const ex = EXERCISES[exerciseKey];
   if (!ex?.progression) return FALLBACK;
@@ -37,7 +37,7 @@ export async function getProgressionData(exerciseKey) {
     // No real history yet — seed the suggested weight from the exercise definition
     // so the weight chip is pre-filled on a fresh install.
     const w = ex.defaultWeight;
-    return { suggestedWeight: w || null, badge: w ? `${w} lbs` : null, levelUp: false };
+    return { suggestedWeight: w || null, badge: w ? `${w} lbs` : null, levelUp: false, streak: 0, streakNeeded: cfg.successesNeeded };
   }
 
   const lastWeight = _sessionWeight(entries[0]);
@@ -60,11 +60,13 @@ export async function getProgressionData(exerciseKey) {
       levelUp:    true,
       prevWeight: lastWeight,
       increment:  cfg.increment,
+      streak,
+      streakNeeded: needed,
     };
   } else if (streak > 0 && needed > 1) {
-    return { suggestedWeight: lastWeight, badge: `${lastWeight} lbs · Streak ${streak}/${needed} 🚀`, levelUp: false };
+    return { suggestedWeight: lastWeight, badge: `${lastWeight} lbs · Streak ${streak}/${needed} 🚀`, levelUp: false, streak, streakNeeded: needed };
   } else {
-    return { suggestedWeight: lastWeight, badge: lastWeight > 0 ? `${lastWeight} lbs` : null, levelUp: false };
+    return { suggestedWeight: lastWeight, badge: lastWeight > 0 ? `${lastWeight} lbs` : null, levelUp: false, streak, streakNeeded: needed };
   }
 }
 
@@ -212,6 +214,102 @@ export function computeVolume(logs) {
       sum + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0)
     , 0)
   , 0);
+}
+
+/**
+ * Return all data needed for the session detail bottom sheet.
+ * Fetches current session + its logs, finds the previous session for the same
+ * day, and computes per-set weight direction and rep-hit flags for each exercise.
+ *
+ * @param {number} startedAt — session primary key
+ * @returns {Promise<{
+ *   session: object,
+ *   prevSession: object|null,
+ *   exercises: object[],
+ *   currentVolume: number,
+ *   prevVolume: number|null
+ * }|null>}
+ */
+export async function getSessionDetails(startedAt) {
+  const db = _requireDB();
+
+  const allSessions = await _promisify(
+    db.transaction(STORE_COMPLETED, 'readonly')
+      .objectStore(STORE_COMPLETED)
+      .index('by_completedAt')
+      .getAll()
+  );
+
+  const thisSession = allSessions.find(s => s.startedAt === startedAt);
+  if (!thisSession) return null;
+
+  // Find the session immediately before this one for the same day (oldest→newest).
+  const sameDay = allSessions
+    .filter(s => s.day === thisSession.day)
+    .sort((a, b) => a.completedAt - b.completedAt);
+  const thisIdx    = sameDay.findIndex(s => s.startedAt === startedAt);
+  const prevSession = thisIdx > 0 ? sameDay[thisIdx - 1] : null;
+
+  const [currentLogs, prevLogs] = await Promise.all([
+    getLogsForSession(startedAt),
+    prevSession ? getLogsForSession(prevSession.startedAt) : Promise.resolve([]),
+  ]);
+
+  const prevLogMap = {};
+  for (const log of prevLogs) prevLogMap[log.exerciseKey] = log;
+
+  const progDataList = await Promise.all(
+    currentLogs.map(l => getProgressionData(l.exerciseKey))
+  );
+
+  const exercises = currentLogs.map((log, i) => {
+    const prog               = progDataList[i];
+    const prevLog            = prevLogMap[log.exerciseKey] ?? null;
+    const prevBaselineWeight = prevLog?.sets?.[0]
+      ? (parseFloat(prevLog.sets[0].weight) || 0)
+      : null;
+
+    const ex         = EXERCISES[log.exerciseKey];
+    const targetReps = ex?.progression?.targetReps ?? 10;
+
+    // Use the stored suggestedWeight as the per-set comparison baseline so
+    // progression-bumped weights don't all show green. Fall back to the first
+    // set's weight for logs written before this field existed.
+    const baseline = log.suggestedWeight != null
+      ? log.suggestedWeight
+      : (parseFloat(log.sets?.[0]?.weight) || 0);
+
+    const sets = log.sets.map(s => {
+      const w = parseFloat(s.weight) || 0;
+      const r = parseInt(s.reps) || 0;
+      let weightDir = 0;
+      if (baseline > 0) {
+        if (w > baseline)      weightDir =  1;
+        else if (w < baseline) weightDir = -1;
+      }
+      return { weight: w, reps: r, weightDir, repsHit: r >= targetReps };
+    });
+
+    return {
+      exerciseKey:        log.exerciseKey,
+      exerciseName:       log.exerciseName,
+      sets,
+      prevBaselineWeight,
+      levelUp:            prog.levelUp,
+      increment:          prog.increment ?? null,
+      prevWeight:         prog.prevWeight ?? null,
+      streak:             prog.streak ?? 0,
+      streakNeeded:       prog.streakNeeded ?? null,
+    };
+  });
+
+  return {
+    session:       thisSession,
+    prevSession,
+    exercises,
+    currentVolume: computeVolume(currentLogs),
+    prevVolume:    prevLogs.length > 0 ? computeVolume(prevLogs) : null,
+  };
 }
 
 // ─── Internal helpers ────────────────────────────────────────────────────────

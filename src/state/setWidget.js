@@ -22,7 +22,8 @@ export function initSetState(uid, numSets, suggestedWeight, targetReps, exKey, e
   _state[uid] = {
     exKey,
     exName,
-    weight: suggestedWeight || 0,
+    weight:          suggestedWeight || 0,
+    suggestedWeight: suggestedWeight || 0,
     targetReps,
     pills: Array.from({ length: numSets }, () => ({ reps: null, locked: false })),
   };

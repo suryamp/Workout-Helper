@@ -20,3 +20,9 @@
   0%   { border-color: rgba(200,240,67,.9); background: rgba(200,240,67,.18); }
   100% { border-color: rgba(200,240,67,.6); background: rgba(200,240,67,.1);  }
 }
+
+/* Session detail bottom sheet slides up from below. */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}

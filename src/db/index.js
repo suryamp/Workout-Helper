@@ -27,6 +27,7 @@ export {
   deleteHistoryEntry,
   getSessionHistory,
   getLogsForSession,
+  getSessionDetails,
   deleteSession,
   computeVolume,
 }                                           from './logs.js';

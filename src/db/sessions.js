@@ -49,14 +49,15 @@ export function stageSetLog(day, entry) {
   if (!entry.sets?.length) return;
   const now = new Date();
   _pending[entry.uid] = {
-    exerciseKey:  entry.exerciseKey,
-    exerciseName: entry.exerciseName,
-    uid:          entry.uid,
+    exerciseKey:     entry.exerciseKey,
+    exerciseName:    entry.exerciseName,
+    uid:             entry.uid,
     day,
-    sets:         entry.sets,
-    date:         now.toISOString(),
-    dateDisplay:  now.toLocaleString(),
-    seeded:       false,
+    sets:            entry.sets,
+    suggestedWeight: entry.suggestedWeight ?? null,
+    date:            now.toISOString(),
+    dateDisplay:     now.toLocaleString(),
+    seeded:          false,
   };
 }
 

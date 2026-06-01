@@ -69,14 +69,18 @@ function _sessionCard(session, logs, volume) {
       <div class="session-header">
         <div class="session-header-left">
           <span class="hist-day">${label}</span>
-          ${volStr}
+          <span class="session-date">${date}${durStr}</span>
         </div>
-        <span class="session-date">${date}${durStr}</span>
+        <div class="session-header-right">
+          
+          <button class="del-icon-btn" onclick="deleteSession(${session.startedAt})" aria-label="Delete session">🚫</button>
+        </div>
       </div>
       <div class="session-exercises">${exRows}</div>
       <div class="session-actions">
-        <button class="share-btn" onclick="shareSession('${sharePayload}')">📤 Share</button>
-        <button class="del-btn"   onclick="deleteSession(${session.startedAt})">Delete</button>
+        <button class="details-btn" onclick="openSessionDetail(${session.startedAt})">Details</button>
+        ${volStr}
+        <button class="share-btn"   onclick="shareSession('${sharePayload}')">➤ Share</button>
       </div>
     </div>`;
 }

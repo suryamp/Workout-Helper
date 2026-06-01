@@ -210,7 +210,7 @@ export async function renderDay(day) {
 
     let levelUpHTML = '';
     if (levelUps.length > 0) {
-      const title = levelUps.length === 1 ? '⬆ New weight unlocked' : `⬆ ${levelUps.length} new weights unlocked`;
+      const title ='⬆ New weight unlocked';
       const rows = levelUps.map(lu => `
         <div class="warmup-row">
           <span class="wn">${lu.name}</span>
@@ -223,7 +223,11 @@ export async function renderDay(day) {
     }
 
     const shareBtn = sharePayload
-      ? `<button class="share-btn share-btn-done" onclick="shareDoneScreen('${sharePayload}')">📤 Share workout</button>`
+      ? `<button class="share-btn share-btn-done" onclick="shareDoneScreen('${sharePayload}')">➤ Share</button>`
+      : '';
+
+    const detailsBtn = thisSession
+      ? `<button class="details-btn details-btn-done" onclick="openSessionDetail(${thisSession.startedAt})">View Details</button>`
       : '';
 
     html += `<div class="day-done">
@@ -232,6 +236,7 @@ export async function renderDay(day) {
       ${volStr}
       ${levelUpHTML}
       <div class="done-actions">
+        ${detailsBtn}
         ${shareBtn}
         <button class="restart-btn" onclick="openRestartModal('${day}')">Restart Workout</button>
       </div>
