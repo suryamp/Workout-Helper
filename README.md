@@ -14,6 +14,9 @@ A mobile-first progressive web app (PWA) for tracking a structured 4-day strengt
 - **Warm-up slides** — shown before heavy days
 - **Session management** — stale sessions from previous days are auto-closed on next open
 - **History tab** — recent workout log with per-exercise set breakdowns and delete support
+- **Session detail sheet** — tap any session to see per-set analytics, volume vs. last time, and progression state; swipe down to dismiss
+- **Volume animal** — done screen and session detail compare your total session volume to a real-world animal weight
+- **Wordle-style share** — share a compact rep-grid summary of any session via the native share sheet or clipboard
 - **Weight modal** — tap the weight chip to update lbs for any exercise
 - **Custom timer** — set any arbitrary rest duration
 - **PWA-ready** — viewport and apple-mobile-web-app meta tags included
@@ -47,22 +50,28 @@ workout-tracker/
     ├── main.js           # App entry: boot sequence + window.* globals
     │
     ├── data/
-    │   ├── exercises.js  # EXERCISES library (pure data, no imports)
-    │   └── days.js       # DAYS programs + DAY_ROTATION + DAY_LABELS
+    │   ├── exercises.js     # EXERCISES library (pure data, no imports)
+    │   ├── days.js          # DAYS programs + DAY_ROTATION + DAY_LABELS
+    │   └── volumeAnimals.js # Animal weight comparison table + getVolumeAnimal()
     │
     ├── db/
-    │   └── index.js      # IndexedDB layer
+    │   ├── index.js      # Public API barrel
+    │   ├── connection.js # IDB singleton, schema (v1+v2), seeding
+    │   ├── sessions.js   # Staging buffer, atomic flush, progression snapshot
+    │   └── logs.js       # Progression, history, session details
     │
     ├── state/
     │   ├── setWidget.js  # In-memory set state map and mutations
     │   └── session.js    # Session lifecycle (start, complete, abandon, reconcile)
     │
     ├── ui/
-    │   ├── render.js     # renderDay, carousel, progress bar, done screen
-    │   ├── modals.js     # Weight, custom timer, and restart modals
-    │   ├── timer.js      # Countdown logic, smart timer, preset visibility
-    │   ├── history.js    # History tab rendering and entry deletion
-    │   └── nav.js        # showPage, setActiveTab
+    │   ├── render.js        # renderDay, carousel, progress bar, done screen
+    │   ├── share.js         # Wordle-style share text builder + share/copy helper
+    │   ├── sessionDetail.js # Per-session analytics bottom sheet
+    │   ├── modals.js        # Weight and custom timer modals
+    │   ├── timer.js         # Countdown logic, two-phase smart timer
+    │   ├── history.js       # History tab rendering and entry deletion
+    │   └── nav.js           # showPage, setActiveTab
     │
     └── utils/
         └── time.js       # getLogicalDay, endOfLogicalDay (pure helpers)
@@ -172,6 +181,6 @@ tokens.css → layout.css → components.css → animations.css
 
 ## IDB Schema
 
-Current version: `SCHEMA_VER = 1` (defined in `src/db/index.js`).
+Current version: `SCHEMA_VER = 2` (defined in `src/db/connection.js`).
 
-To add a store or index in a future version, bump the version and add an `if (event.oldVersion < 2)` block below the existing v1 block. Never modify the v1 block — existing users must only run the delta.
+To add a store or index in a future version, bump to `3` and add an `if (event.oldVersion < 3)` block below the existing v1 and v2 blocks. Never modify shipped version blocks — existing users must only run the delta. See `ARCHITECTURE.md §12` for the full migration protocol.

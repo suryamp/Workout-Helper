@@ -36,6 +36,7 @@ index.html
           │    ├── src/db/connection.js ◄── src/data/exercises.js
           │    ├── src/db/sessions.js  ◄── src/db/connection.js
           │    │                       ◄── src/utils/time.js
+          │    │                       ◄── src/db/logs.js  ← progression snapshot
           │    └── src/db/logs.js      ◄── src/db/connection.js
           │                            ◄── src/data/exercises.js
           │         │                                   │
@@ -49,10 +50,20 @@ index.html
           │                                             │
           ├── src/ui/render.js ◄── src/data/exercises.js│
           │         │          ◄── src/data/days.js     │
+          │         │          ◄── src/data/volumeAnimals.js
           │         │          ◄── src/db/index.js      │
           │         │          ◄── src/state/setWidget.js│
           │         │          ◄── src/state/session.js  │
-          │         └──────────◄── src/ui/timer.js      │
+          │         │          ◄── src/ui/timer.js      │
+          │         └──────────◄── src/ui/share.js      │
+          │                                             │
+          ├── src/ui/share.js  ◄── src/data/exercises.js│
+          │                    ◄── src/data/days.js     │
+          │                    ◄── src/data/volumeAnimals.js
+          │                                             │
+          ├── src/ui/sessionDetail.js ◄── src/db/index.js│
+          │                           ◄── src/data/days.js
+          │                           ◄── src/data/volumeAnimals.js
           │                                             │
           ├── src/ui/timer.js ◄── src/data/exercises.js │
           ├── src/ui/modals.js ◄── src/state/setWidget.js│
@@ -72,6 +83,7 @@ index.html
 |---|---|
 | `src/data/exercises.js` | Imports nothing |
 | `src/data/days.js` | Imports nothing |
+| `src/data/volumeAnimals.js` | Imports nothing |
 | `src/utils/time.js` | Imports nothing |
 
 **Fan-in hotspots** (imported by many — most likely to affect multiple modules on change):
@@ -90,7 +102,8 @@ The codebase has four explicit layers. Ownership flows in one direction: each la
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  ui/  — render.js  timer.js  modals.js  history.js  nav │
+│  ui/  — render.js  timer.js  modals.js  history.js  nav  │
+│         share.js  sessionDetail.js                        │
 │  Owns: DOM reads/writes, HTML strings, user interaction  │
 │  Forbidden: direct IDB access, business logic            │
 ├─────────────────────────────────────────────────────────┤
@@ -140,21 +153,28 @@ A **Step** is either a single exercise key (string) or a two-element array of ex
 
 ```
 WorkoutSession {
-  logicalDay: "YYYY-MM-DD",    ← 3AM-shifted date string; primary key of activeSessions
-  day: "heavy-a" | ...,        ← which program day was performed
-  startedAt: number,           ← Unix ms; primary key of completedSessions
-  completedAt: number | null   ← null while in-progress
+  logicalDay:     "YYYY-MM-DD",    ← 3AM-shifted date string; primary key of activeSessions
+  day:            "heavy-a" | ..., ← which program day was performed
+  startedAt:      number,          ← Unix ms; primary key of completedSessions
+  completedAt:    number | null,   ← null while in-progress
+  progressionMap: {                ← written by completeSession() after atomic flush
+    [exerciseKey]: {               ← snapshot of getProgressionData() at save time
+      levelUp, streak, streakNeeded, suggestedWeight, prevWeight, increment
+    }
+  }
 }
 
 ExerciseLog {
-  exerciseKey:  string,        ← snapshot of key at session time (safe across renames)
-  exerciseName: string,        ← snapshot of displayName at session time
-  uid:          string,        ← "${day}-${stepIdx}-${partIdx}"
-  day:          string,
-  sets:         SetLog[],
-  date:         ISO8601,       ← used for compound IDB index ordering
-  dateDisplay:  string,        ← locale string for display
-  seeded:       bool           ← true only for install-time default entries
+  exerciseKey:     string,   ← snapshot of key at session time (safe across renames)
+  exerciseName:    string,   ← snapshot of displayName at session time
+  uid:             string,   ← "${day}-${stepIdx}-${partIdx}"
+  day:             string,
+  sets:            SetLog[],
+  suggestedWeight: number,   ← weight suggested at the time of the session
+  sessionId:       number,   ← FK → WorkoutSession.startedAt (v2 index)
+  date:            ISO8601,  ← used for compound IDB index ordering
+  dateDisplay:     string,   ← locale string for display
+  seeded:          bool      ← true only for install-time default entries
 }
 
 SetLog {
@@ -208,11 +228,11 @@ The application has three aggregate roots. All mutations route through exactly o
 
 ### 4.3 Progression State (exercise-owned, session-derived)
 
-**Owner:** `src/db/index.js` — `getProgressionData` and `_getRecentLogs`.
+**Owner:** `src/db/logs.js` — `getProgressionData` and `_getRecentLogs`.
 
-Progression is computed **on demand** from historical set-logs rather than stored as a separate writable record. There is no `progression` IDB store. The suggested weight and level-up status are derived each time a card is rendered by reading the `by_exercise_date` compound index.
+Progression is computed **on demand** from historical set-logs when rendering exercise cards. There is no dedicated `progression` IDB store. The suggested weight and level-up status are derived by reading the `by_exercise_date` compound index.
 
-This matters: progression cannot get out of sync with history, because it _is_ history. There is no separate mutable progression record to reconcile.
+**Snapshot at save time:** `completeSession()` additionally writes a `progressionMap` onto each completed session record immediately after the atomic flush. This snapshot captures what `getProgressionData` returned at the exact moment the session was saved. `getSessionDetails()` reads this snapshot directly — it never recomputes progression from history. This guarantees that historical session detail views always show the progression state that was true at the time of the session, not today's state.
 
 ---
 
@@ -232,13 +252,18 @@ This matters: progression cannot get out of sync with history, because it _is_ h
 │   _pending (db/index.js)  — staged set-logs awaiting commit  │
 │   _db (db/index.js)       — cached IDBDatabase connection    │
 ├─────────────────────────────────────────────────────────────┤
-│ DERIVED (computed; never stored)                             │
+│ DERIVED (computed on demand)                                  │
 │   suggestedWeight  — from last N non-seeded set-logs        │
 │   streak           — consecutive sessions above target reps  │
 │   levelUp          — streak >= successesNeeded              │
 │   nextDay          — last completed session's day + 1 in rotation│
 │   minsRemaining    — sum of estMinutes for remaining steps   │
 │   logicalDay       — Date.now() shifted -3h, formatted       │
+│                                                               │
+│ SNAPSHOTTED (derived once at save time, stored on session)   │
+│   progressionMap   — per-exercise { levelUp, streak, ... }  │
+│                       written by completeSession() post-flush │
+│                       read by getSessionDetails() — no recompute│
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -319,13 +344,16 @@ User taps "✓ Finish" on the last exercise
               session  = sessions[logicalDay]
               GUARD: if (!session || session.completedAt) return   ← idempotent
               session.completedAt = Date.now()
-              → dbCompleteSession(day, session)   [db/index.js]
+              → dbCompleteSession(day, session)   [db/sessions.js]
                   Single readwrite txn across [setLogs, activeSessions, completedSessions]:
                     1. logStore.add(entry) for each _pending entry where entry.day === day
                     2. activeStore.delete(session.logicalDay)
                     3. completedStore.put(session)
                     4. if completedSessions.count() > 365: cursor-delete oldest
                     5. oncomplete: delete _pending[uid] for all uid starting with day+'-'
+                  After txn resolves (separate write):
+                    6. getProgressionData() for each unique exerciseKey in flushed logs
+                    7. completedStore.put({ ...session, progressionMap })
           renders done screen
 ```
 
@@ -351,37 +379,43 @@ This handles the case where the user started a workout on Monday, closed the app
 
 ## 7. Persistence Layer
 
-### 7.1 IndexedDB Schema (v1)
+### 7.1 IndexedDB Schema (v2)
 
 ```
-WorkoutDB (SCHEMA_VER = 1)
+WorkoutDB (SCHEMA_VER = 2)
 │
-├── setLogs  { keyPath: 'id', autoIncrement: true }
-│   ├── by_exercise_date  [exerciseKey, date]   compound, non-unique
+├── setLogs  { keyPath: 'id', autoIncrement: true }   [v1]
+│   ├── by_exercise_date  [exerciseKey, date]   compound, non-unique  [v1]
 │   │     Purpose: "last N logs for exercise X, newest-first"
 │   │     Used by: getProgressionData(), _getRecentLogs()
 │   │     Range: IDBKeyRange.bound([key,''], [key,'￿']) with 'prev' cursor
 │   │     Note: '￿' (high surrogate) sorts after any ISO date string
 │   │
-│   ├── by_day    'day'   non-unique
+│   ├── by_day    'day'   non-unique  [v1]
 │   │     Purpose: "all logs for a given workout day key"
 │   │
-│   ├── by_date   'date'  non-unique
+│   ├── by_date   'date'  non-unique  [v1]
 │   │     Purpose: history screen newest-first full scan
 │   │     Used by: getHistory() without exerciseKey filter
 │   │
-│   └── by_seeded 'seeded'  non-unique (sparse)
-│         Purpose: filter seed records out of history queries
-│         Note: only seed entries have this field set; real logs omit it
+│   ├── by_seeded 'seeded'  non-unique (sparse)  [v1]
+│   │     Purpose: filter seed records out of history queries
+│   │     Note: only seed entries have this field set; real logs omit it
+│   │
+│   └── by_session  'sessionId'  non-unique  [v2]
+│         Purpose: "all logs for a given session" (FK → completedSessions.startedAt)
+│         Used by: getLogsForSession(), getSessionDetails()
+│         Note: pre-v2 logs lack sessionId and are absent from this index
 │
-├── activeSessions  { keyPath: 'logicalDay' }
+├── activeSessions  { keyPath: 'logicalDay' }  [v1]
 │   At most one entry per calendar day (3AM-shifted).
 │   This store is the "is-workout-in-progress" signal.
 │
-└── completedSessions  { keyPath: 'startedAt' }
-    └── by_completedAt  'completedAt'  non-unique
+└── completedSessions  { keyPath: 'startedAt' }  [v1]
+    └── by_completedAt  'completedAt'  non-unique  [v1]
           Purpose: getCompletedSessions() newest-first, oldest-first for cap deletion
           Used by: getNextDay(), reconcileStaleSessions(), session cap eviction
+    Note: records also carry progressionMap (written post-flush, not indexed)
 ```
 
 ### 7.2 The Compound Index Trick
@@ -511,11 +545,11 @@ These are load-bearing constraints, not style preferences. Each has a specific e
 
 **Failure mode:** Duplicating the shift constant (e.g., `Date.now() - 3*60*60*1000` directly in `session.js`) creates a split definition. Changing the boundary from 3AM to 4AM would then require finding and updating all inline copies, with silent correctness errors if any are missed.
 
-### 10.4 IDB v1 schema block is frozen
+### 10.4 IDB version blocks are frozen once shipped
 
-**Constraint:** The `if (event.oldVersion < 1) { ... }` block in `db/index.js/onupgradeneeded` must never be modified.
+**Constraint:** The `if (event.oldVersion < 1)` and `if (event.oldVersion < 2)` blocks in `db/connection.js/onupgradeneeded` must never be modified.
 
-**Why:** Users who already have the database at v1 will not re-run this block on upgrade — IDB only runs the delta for their current `oldVersion`. Modifying the v1 block corrupts the upgrade path for existing users; their schema will differ from what the v1 block would produce today.
+**Why:** Users who already have the database at an older version will not re-run earlier blocks on upgrade — IDB only runs the delta for their current `oldVersion`. Modifying a shipped block corrupts the upgrade path for existing users; their schema will differ from what the block would produce today.
 
 **Correct procedure:** See [Section 12](#12-idb-schema-migration-protocol).
 
@@ -584,21 +618,25 @@ See [Section 12](#12-idb-schema-migration-protocol). Never modify the v1 block.
 
 ## 12. IDB Schema Migration Protocol
 
-**Current version:** `SCHEMA_VER = 1` (`src/db/index.js`).
+**Current version:** `SCHEMA_VER = 2` (`src/db/connection.js`).
 
 To add a store or index:
 
 ```js
-// 1. Bump SCHEMA_VER to 2 at the top of db/index.js.
-const SCHEMA_VER = 2;
+// 1. Bump SCHEMA_VER to 3 at the top of db/connection.js.
+const SCHEMA_VER = 3;
 
-// 2. In onupgradeneeded, add a NEW block BELOW the v1 block.
-//    Never touch the v1 block.
+// 2. In onupgradeneeded, add a NEW block BELOW the v2 block.
+//    Never touch the v1 or v2 blocks.
 if (event.oldVersion < 1) {
   // ... existing v1 block, untouched ...
 }
 
 if (event.oldVersion < 2) {
+  // ... existing v2 block, untouched ...
+}
+
+if (event.oldVersion < 3) {
   // Use event.target.transaction (the implicit upgrade txn).
   // Do NOT open a new transaction — IDB chains all upgrade ops atomically.
   const db  = event.target.result;
@@ -611,7 +649,7 @@ if (event.oldVersion < 2) {
 **To migrate existing data** (e.g., backfill a new field):
 
 ```js
-if (event.oldVersion < 2) {
+if (event.oldVersion < 3) {
   const store  = txn.objectStore('existingStore');
   const cursor = store.openCursor();
   cursor.onsuccess = (e) => {
@@ -636,15 +674,18 @@ if (event.oldVersion < 2) {
 | `src/main.js` | Boot sequence, `saveAndAdvance` / `advanceDay` / `goBack` / `restartDay`, all `window.*` exports |
 | `src/data/exercises.js` | `EXERCISES` — pure data, zero imports |
 | `src/data/days.js` | `DAYS`, `DAY_ROTATION`, `DAY_LABELS` — pure data, zero imports |
+| `src/data/volumeAnimals.js` | `VOLUME_ANIMALS` table, `getVolumeAnimal(lbs)` — pure data, zero imports |
 | `src/db/index.js` | Public API barrel — re-exports everything from the three sub-modules |
-| `src/db/connection.js` | `_db` singleton, `initDB`, schema v1, seeding, `_idbWrite` / `_promisify` / `_requireDB`, store name constants |
-| `src/db/sessions.js` | `_pending` accumulator, `stageSetLog`, `abandonSession`, `completeSession` (atomic flush), active/completed session CRUD |
-| `src/db/logs.js` | `getProgressionData`, `getHistory`, `deleteHistoryEntry`, `_getRecentLogs`, streak computation |
+| `src/db/connection.js` | `_db` singleton, `initDB`, schema v1+v2, seeding, `_idbWrite` / `_promisify` / `_requireDB`, store name constants |
+| `src/db/sessions.js` | `_pending` accumulator, `stageSetLog`, `abandonSession`, `completeSession` (atomic flush + progression snapshot), active/completed session CRUD |
+| `src/db/logs.js` | `getProgressionData`, `getHistory`, `getSessionDetails`, `deleteHistoryEntry`, `computeVolume`, `_getRecentLogs`, streak computation |
 | `src/utils/time.js` | `getLogicalDay`, `endOfLogicalDay` — pure functions, zero imports |
 | `src/state/session.js` | Session start / complete / abandon / reconcile / next-day rotation. No DOM access. |
 | `src/state/setWidget.js` | `_state` map, `initSetState`, `tapPill`, `_lockPill` (debounce callback), `clearDayState`, `renderSetWidget` |
 | `src/ui/render.js` | `renderDay`, `buildSlide`, `exCardInner`, `warmupSlide`, `timerHTML`, `minsRemaining` |
-| `src/ui/timer.js` | Countdown, `startTimer(sec, overtimeSec)` / `stopTimer` / `_tick`, two-phase timer, `getSmartTimer` → `{ sec, overtimeSec }`, `REST_DEFAULTS` |
-| `src/ui/modals.js` | Weight modal, custom timer modal, restart modal — DOM only, no business logic |
+| `src/ui/timer.js` | Countdown, `startTimer(sec, overtimeSec)` / `_tick`, two-phase timer, `getSmartTimer` → `{ sec, overtimeSec }`, `REST_DEFAULTS` |
+| `src/ui/share.js` | `buildShareText`, `shareText` — Wordle-style share snippet builder and native share/clipboard helper |
+| `src/ui/sessionDetail.js` | `openSessionDetail`, `closeSessionDetail` — bottom sheet with per-set analytics, swipe-to-dismiss |
+| `src/ui/modals.js` | Weight modal, custom timer modal — DOM only, no business logic |
 | `src/ui/history.js` | `renderHistory`, `deleteEntry` |
 | `src/ui/nav.js` | `showPage`, `setActiveTab` |
