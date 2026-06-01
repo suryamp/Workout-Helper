@@ -331,7 +331,7 @@
 .detail-section-title{font-size:18px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text);margin-bottom:10px;text-align:center;}
 
 /* Volume comparison */
-.detail-vol-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:13px;}
+.detail-vol-row{justify-content:space-between;align-items:center;padding:3px 0;font-size:13px;text-align:center;}
 .detail-vol-label{color:var(--text2);}
 .detail-vol-today{font-weight:700;color:var(--accent);}
 .detail-vol-up{font-weight:700;color:#6edb7a;}
@@ -342,21 +342,24 @@
 /* Exercise blocks */
 .detail-ex-block{padding:12px 0;border-bottom:1px solid var(--border);}
 .detail-ex-block:last-child{border-bottom:none;}
-.detail-ex-name{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.03em;text-transform:uppercase;margin-bottom:6px;}
-.detail-streak{font-size:11px;color:var(--text3);margin-bottom:6px;}
+.detail-ex-name{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.03em;text-transform:uppercase;margin-bottom:6px;text-align:center;}
+.detail-ex-meta{font-size:11px;color:var(--text3);text-align:center;margin-bottom:8px;}
+.detail-streak{color:var(--text3);}
 .detail-streak-done{color:var(--accent);}
 
 /* Set rows */
-.detail-set-row{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:8px;padding:3px 0;}
-.detail-set-num{font-size:11px;color:var(--text3);}
-.detail-set-wt{font-size:13px;font-weight:600;color:var(--text2);}
+.detail-set-rows{display:flex;flex-direction:column;align-items:center;margin-top:4px;}
+.detail-set-row{display:flex;align-items:center;gap:12px;padding:5px 0;}
+.detail-set-num{font-size:11px;color:var(--text3);min-width:36px;flex-shrink:0;}
+.detail-set-wt{font-size:13px;font-weight:600;color:var(--text2);min-width:56px;flex-shrink:0;}
+.detail-set-x{font-size:13px;font-weight:600;color:var(--text2);flex-shrink:0;}
 .detail-wt-up{color:#6edb7a;}
 .detail-wt-down{color:var(--ss);}
-.detail-set-reps{font-size:13px;font-weight:700;color:var(--text);text-align:right;}
+.detail-set-reps{font-size:13px;font-weight:700;color:var(--text);}
 .detail-reps-miss{color:var(--ss);}
 
 /* Previous session reference */
-.detail-prev-ref{font-size:10px;color:var(--text3);margin-top:5px;font-style:italic;}
+.detail-prev-ref{color:var(--text3);}
 
 /* Close button */
 .detail-close-btn{flex-shrink:0;background:var(--surface2);border:1px solid var(--border2);border-radius:0;color:var(--text2);font-family:inherit;font-size:13px;font-weight:700;padding:16px;cursor:pointer;transition:background .15s;width:100%;}

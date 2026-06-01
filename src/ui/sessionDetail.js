@@ -18,6 +18,32 @@ function _getOverlay() {
   _overlay.addEventListener('click', e => {
     if (e.target === _overlay) closeSessionDetail();
   });
+
+  const sheet = _overlay.querySelector('#session-detail-sheet');
+  let _startY = 0, _tracking = false;
+  sheet.addEventListener('touchstart', e => {
+    const scroll = sheet.querySelector('.detail-scroll');
+    _tracking = !scroll || scroll.scrollTop === 0;
+    _startY = e.touches[0].clientY;
+    if (_tracking) sheet.style.transition = 'none';
+  }, { passive: true });
+  sheet.addEventListener('touchmove', e => {
+    if (!_tracking) return;
+    const dy = Math.max(0, e.touches[0].clientY - _startY);
+    sheet.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+  sheet.addEventListener('touchend', e => {
+    if (!_tracking) return;
+    _tracking = false;
+    sheet.style.transition = '';
+    const dy = e.changedTouches[0].clientY - _startY;
+    if (dy > 80) {
+      closeSessionDetail();
+    } else {
+      sheet.style.transform = '';
+    }
+  }, { passive: true });
+
   document.body.appendChild(_overlay);
   return _overlay;
 }
@@ -25,6 +51,7 @@ function _getOverlay() {
 export async function openSessionDetail(startedAt) {
   const overlay = _getOverlay();
   const sheet   = document.getElementById('session-detail-sheet');
+  sheet.style.transform = '';
   sheet.innerHTML = '<div class="detail-loading">Loading…</div>';
   overlay.classList.add('open');
 
@@ -114,20 +141,25 @@ function _renderExBlock({ exerciseName, sets, prevBaselineWeight, levelUp, incre
   let bannerHtml = '';
   if (levelUp && prevWeight != null && increment != null) {
     bannerHtml = `<div class="levelup-banner">
-      <span class="levelup-icon">⬆</span>
-      <span class="levelup-text">New weight: <strong>${prevWeight + increment} lbs</strong></span>
-      <span class="levelup-delta">+${increment} lbs</span>
+      <span class="levelup-icon">🚀</span>
+      <span class="levelup-text">New weight for next time:</span>
+      <span class="levelup-delta">${prevWeight + increment} lbs</span>
     </div>`;
   }
 
-  let streakHtml = '';
+  const metaParts = [];
+  if (prevBaselineWeight != null && prevBaselineWeight > 0)
+    metaParts.push(`<span class="detail-prev-ref">Last time: ${prevBaselineWeight} lbs</span>`);
+  else if (prevBaselineWeight === null)
+    metaParts.push(`<span class="detail-prev-ref">First time</span>`);
   if (streak > 0 && streakNeeded != null && streakNeeded > 1) {
-    if (streak >= streakNeeded) {
-      streakHtml = `<div class="detail-streak detail-streak-done">Streak complete 🚀</div>`;
-    } else {
-      streakHtml = `<div class="detail-streak">Streak ${streak}/${streakNeeded} 🚀</div>`;
-    }
+    const cls = streak >= streakNeeded ? 'detail-streak-done' : 'detail-streak';
+    const txt = streak >= streakNeeded ? 'Streak complete 🚀' : `Streak ${streak}/${streakNeeded} 🚀`;
+    metaParts.push(`<span class="${cls}">${txt}</span>`);
   }
+  const metaHtml = metaParts.length > 0
+    ? `<div class="detail-ex-meta">${metaParts.join(' · ')}</div>`
+    : '';
 
   const setRows = sets.map((s, i) => {
     let wtClass  = '';
@@ -136,26 +168,20 @@ function _renderExBlock({ exerciseName, sets, prevBaselineWeight, levelUp, incre
     if (s.weightDir === -1) { wtClass = 'detail-wt-down'; wtSuffix = ' ↓'; }
     const wtStr    = s.weight > 0 ? `${s.weight} lbs` : 'BW';
     const repsClass = s.repsHit ? '' : 'detail-reps-miss';
-    const repsStr  = s.repsHit ? `${s.reps}` : `[${s.reps}]`;
+    const repsStr  = `${s.reps} reps`;
 
     return `<div class="detail-set-row">
       <span class="detail-set-num">Set ${i + 1}</span>
       <span class="detail-set-wt ${wtClass}">${wtStr}${wtSuffix}</span>
+      <span class="detail-set-x"> x </span>
       <span class="detail-set-reps ${repsClass}">${repsStr}</span>
     </div>`;
   }).join('');
 
-  const prevRefHtml = prevBaselineWeight != null && prevBaselineWeight > 0
-    ? `<div class="detail-prev-ref">Last time: ${prevBaselineWeight} lbs</div>`
-    : prevBaselineWeight === null
-      ? `<div class="detail-prev-ref">First time</div>`
-      : '';
-
   return `<div class="detail-ex-block">
     ${bannerHtml}
     <div class="detail-ex-name">${exerciseName}</div>
-    ${streakHtml}
-    ${setRows}
-    ${prevRefHtml}
+    ${metaHtml}
+    <div class="detail-set-rows">${setRows}</div>
   </div>`;
 }
