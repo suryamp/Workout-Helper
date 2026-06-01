@@ -66,9 +66,9 @@ Each CSS file may only reference variables defined in a previous layer. `animati
 | `src/db/logs.js` | `getProgressionData`, `getHistory`, `deleteHistoryEntry`, streak computation |
 | `src/utils/time.js` | `getLogicalDay`, `endOfLogicalDay` — pure functions, no imports |
 | `src/state/session.js` | Session start/complete/abandon/reconcile/next-day rotation. No DOM access. |
-| `src/state/setWidget.js` | `_state` map, `initSetState`, `tapPill`, `lockNextSet`, `renderSetWidget` |
+| `src/state/setWidget.js` | `_state` map, `initSetState`, `tapPill`, `_lockPill` (debounce callback), `clearDayState`, `renderSetWidget` |
 | `src/ui/render.js` | `renderDay`, `buildSlide`, `exCardInner`, `warmupSlide`, `timerHTML`, `minsRemaining` |
-| `src/ui/timer.js` | Countdown, `startTimer`/`stopTimer`, `getSmartTimer`, `customTimer`, `toggleTimerPresets` |
+| `src/ui/timer.js` | Countdown, `startTimer(sec, overtimeSec)`/`stopTimer`, two-phase timer logic, `getSmartTimer`, `customTimer`, `toggleTimerPresets` |
 | `src/ui/modals.js` | Weight modal, custom timer modal, restart modal — DOM only, no business logic |
 | `src/ui/history.js` | `renderHistory`, `deleteEntry` |
 | `src/ui/nav.js` | `showPage`, `setActiveTab` |
@@ -77,7 +77,7 @@ Each CSS file may only reference variables defined in a previous layer. `animati
 
 ## Timer ownership
 
-`lockNextSet` (in `setWidget.js`) is the **canonical** source of timer starts — it fires after every set confirmation. `saveAndAdvance` (in `main.js`) does **not** start a timer; it lets the one `lockNextSet` started continue uninterrupted. The only other timers are the manual preset buttons in the timer card, which are triggered by the user explicitly.
+The per-pill debounce in `setWidget.js` is the **canonical** source of timer starts. After a pill is tapped and left untouched for 1.5 s, `_lockPill` fires: it snapshots the weight, marks the pill locked, and calls `startTimer(sec, overtimeSec)`. `getSmartTimer` returns a two-phase config when the user hit their target reps — phase 1 is the easy window (green), phase 2 is the hard extension (red) — so the timer self-calibrates without the user selecting a preset. `saveAndAdvance` does **not** start a timer. The only other timers are the manual preset buttons in the timer card, triggered explicitly by the user.
 
 ---
 
@@ -120,6 +120,6 @@ The app uses a **3 AM cutoff**. Workouts between midnight and 2:59 AM belong to 
 - Do not import anything into `src/data/exercises.js` or `src/data/days.js`
 - Do not duplicate `getLogicalDay` logic — import it from `src/utils/time.js`
 - Do not assign to `window.*` anywhere except the `Object.assign` block in `src/main.js`
-- Do not call `startTimer` from `saveAndAdvance` — `lockNextSet` owns that
+- Do not call `startTimer` from `saveAndAdvance` — the pill debounce (`_lockPill`) owns that
 - Do not remove the `if (!session || session.completedAt) return` guard in `completeSession`
 - Do not modify the v1 IDB schema block when adding new stores — add a v2 block below it

@@ -256,27 +256,26 @@ This matters: progression cannot get out of sync with history, because it _is_ h
 ```
 User taps pill (reps >= 1)
   → tapPill(uid, pillIdx)           [setWidget.js]
-      pill.reps cycles: null → target → target-1 → ... → 0 → target
+      if pill.locked: unlock, clear debounce timer
+      else: pill.reps cycles null → target → target-1 → ... → 0 → target
+            reset per-pill debounce (_debounceTimers[uid-pillIdx], 1500 ms)
       → renderSetWidget(uid)
 
-User taps "Start New Set"
-  → lockNextSet(uid)                [setWidget.js]
-      find first pill: reps !== null && !locked
-      pill.weight = s.weight
+Debounce fires (1.5 s after last tap on that pill)
+  → _lockPill(uid, pillIdx)         [setWidget.js]
+      pill.weight = s.weight        ← snapshot weight at confirmation time
       pill.locked = true
       → getSmartTimer(exKey, pill.reps, targetReps)   [timer.js]
-          reps === 0        → rest.failed
-          reps < target - 1 → rest.failed
-          reps === target-1 → rest.hard
-          reps >= target    → rest.easy
-      → startTimer(seconds)         [timer.js]
-          stopTimer() first (clears any prior interval)
-          _timerEnd = Date.now() + sec*1000
-          _tick() immediately, then setInterval(_tick, 500)
+          reps === 0 or < target-1  → { sec: rest.failed, overtimeSec: 0 }
+          reps === target-1         → { sec: rest.hard,   overtimeSec: 0 }
+          reps >= target            → { sec: rest.easy,   overtimeSec: rest.hard - rest.easy }
+      → startTimer(sec, overtimeSec)   [timer.js]
+          Phase 1: sec seconds, green (.timer-display default)
+          Phase 2: if overtimeSec > 0, auto-transitions at 0 → red (.overtime)
       → renderSetWidget(uid)
 ```
 
-The timer is owned entirely by `lockNextSet`. `saveAndAdvance` does **not** start or stop the timer — the rest timer for the last set of an exercise continues counting while the user taps Next and moves to the next slide. This is intentional: gym rest doesn't care about app navigation.
+The per-pill debounce owns all timer starts. `saveAndAdvance` does **not** start or stop the timer — the rest timer continues uninterrupted while the user taps Next and navigates to the next slide. Gym rest doesn't care about app navigation.
 
 ### 6.2 Advancing to the Next Exercise
 
@@ -291,7 +290,7 @@ User taps "Next →"
       items.forEach((key, part) → {
         uid = `${day}-${idx}-${part}`
         s   = getState(uid)
-        sets = locked pills + any pending (unentered) pill
+        sets = all pills where reps !== null (locked or mid-debounce)
         if sets.length > 0:
           stageSetLog(day, { exerciseKey, exerciseName, uid, sets })
                                     [db/index.js — in-memory only]
@@ -643,9 +642,9 @@ if (event.oldVersion < 2) {
 | `src/db/logs.js` | `getProgressionData`, `getHistory`, `deleteHistoryEntry`, `_getRecentLogs`, streak computation |
 | `src/utils/time.js` | `getLogicalDay`, `endOfLogicalDay` — pure functions, zero imports |
 | `src/state/session.js` | Session start / complete / abandon / reconcile / next-day rotation. No DOM access. |
-| `src/state/setWidget.js` | `_state` map, `initSetState`, `tapPill`, `lockNextSet`, `renderSetWidget` |
+| `src/state/setWidget.js` | `_state` map, `initSetState`, `tapPill`, `_lockPill` (debounce callback), `clearDayState`, `renderSetWidget` |
 | `src/ui/render.js` | `renderDay`, `buildSlide`, `exCardInner`, `warmupSlide`, `timerHTML`, `minsRemaining` |
-| `src/ui/timer.js` | Countdown, `startTimer` / `stopTimer` / `_tick` / `getSmartTimer`, `REST_DEFAULTS` |
+| `src/ui/timer.js` | Countdown, `startTimer(sec, overtimeSec)` / `stopTimer` / `_tick`, two-phase timer, `getSmartTimer` → `{ sec, overtimeSec }`, `REST_DEFAULTS` |
 | `src/ui/modals.js` | Weight modal, custom timer modal, restart modal — DOM only, no business logic |
 | `src/ui/history.js` | `renderHistory`, `deleteEntry` |
 | `src/ui/nav.js` | `showPage`, `setActiveTab` |
