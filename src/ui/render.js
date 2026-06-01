@@ -7,7 +7,7 @@
 import { EXERCISES }                     from '../data/exercises.js';
 import { DAYS }                          from '../data/days.js';
 import { getProgressionData }            from '../db/index.js';
-import { initSetState, renderSetWidget } from '../state/setWidget.js';
+import { initSetState, renderSetWidget, getState } from '../state/setWidget.js';
 import { completeSession }               from '../state/session.js';
 import { REST_DEFAULTS }                 from '../ui/timer.js';
 
@@ -175,9 +175,42 @@ export async function renderDay(day) {
   // ── Done ─────────────────────────────────
   if (idx >= total) {
     await completeSession(day);
+
+    // Only check progression for exercises where the user confirmed at least
+    // one set this session. Skipped exercises (no locked pills) are excluded
+    // so prior-session streaks on untouched exercises don't appear here.
+    const completedKeys = steps.flatMap((step, stepIdx) => {
+      const items = Array.isArray(step) ? step : [step];
+      return items.filter((_, partIdx) => {
+        const s = getState(`${day}-${stepIdx}-${partIdx}`);
+        return s?.pills.some(p => p.locked);
+      });
+    });
+    const progData = await Promise.all(completedKeys.map(k => getProgressionData(k)));
+    const levelUps = completedKeys
+      .map((k, i) => ({ key: k, name: exName(k), ...progData[i] }))
+      .filter(e => e.levelUp);
+
+    let levelUpHTML = '';
+    if (levelUps.length > 0) {
+      const title = levelUps.length === 1
+        ? '⬆ New weight unlocked'
+        : `⬆ ${levelUps.length} new weights unlocked`;
+      const rows = levelUps.map(lu => `
+        <div class="warmup-row">
+          <span class="wn">${lu.name}</span>
+          <span class="ws">${lu.prevWeight} → ${lu.suggestedWeight} lbs</span>
+        </div>`).join('');
+      levelUpHTML = `<div class="warmup-slide-card levelup-summary">
+        <div class="warmup-title">${title}</div>
+        ${rows}
+      </div>`;
+    }
+
     html += `<div class="day-done">
       <div class="done-big">🎉</div>
-      <div class="done-msg">${data.label} complete!<br>Nice work.</div>
+      <div class="done-msg">${data.label} complete!<br>You showed up. That's the job.</div>
+      ${levelUpHTML}
       <button class="restart-btn" onclick="openRestartModal('${day}')">Restart Workout</button>
     </div>`;
     cnt.innerHTML = html;

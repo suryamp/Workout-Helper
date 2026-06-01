@@ -130,6 +130,14 @@
 .done-msg{font-size:14px;color:var(--text2);line-height:1.6;}
 .restart-btn{margin-top:20px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:12px 24px;cursor:pointer;}
 
+/* Level-up summary card on done screen */
+.levelup-summary{margin-top:24px;text-align:left;background:linear-gradient(135deg,#0f1f0f,#111a0e,#0d1a12);border-color:rgba(200,240,67,.35);}
+.levelup-summary::before{background:radial-gradient(circle,rgba(200,240,67,.15) 0%,transparent 70%);}
+.levelup-summary .warmup-title{color:var(--accent);}
+.levelup-summary .warmup-title::before{background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.levelup-summary .warmup-row{border-bottom-color:rgba(200,240,67,.12);}
+.levelup-summary .warmup-row .ws{color:var(--accent);}
+
 
 /* ══════════════════════════════════════════
    SET WIDGET — pill buttons + weight chip
