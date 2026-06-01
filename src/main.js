@@ -12,7 +12,8 @@
 //  That block is the only place globals are declared — keep it that way.
 // ══════════════════════════════════════════
 
-import { initDB }                        from './db/index.js';
+import { initDB, recoverIfNeeded }       from './db/index.js';
+import { initTelemetry, capture, Events } from './telemetry.js';
 import { EXERCISES }                     from './data/exercises.js';
 import { DAYS }                          from './data/days.js';
 import { stageSetLog }                   from './db/index.js';
@@ -106,8 +107,39 @@ function openWeightModal(uid) {
 
 // ── Boot ────────────────────────────────
 
+function _showStorageError(err) {
+  document.body.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                min-height:100vh;padding:32px;text-align:center;font-family:inherit;
+                background:var(--bg,#0a0a0f);color:var(--text,#f0f0f5);">
+      <div style="font-size:40px;margin-bottom:16px;">⚠️</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Storage unavailable</div>
+      <div style="font-size:14px;color:#9090aa;margin-bottom:24px;max-width:320px;">
+        Your browser's storage could not be opened. This can happen in private
+        browsing mode on some devices. Your workout data will not be saved in
+        this session.
+      </div>
+      <button onclick="location.reload()"
+        style="background:#c8f043;color:#0a0a0f;border:none;border-radius:10px;
+               padding:12px 28px;font-weight:700;font-size:15px;cursor:pointer;">
+        Retry
+      </button>
+    </div>`;
+}
+
 (async () => {
-  await initDB();
+  initTelemetry();
+
+  try {
+    await initDB();
+  } catch (err) {
+    capture(Events.IDB_INIT_FAILURE, { error: err?.message });
+    _showStorageError(err);
+    return;
+  }
+
+  // Replay any session that failed to commit on a previous run.
+  await recoverIfNeeded();
 
   initWeightModal();
   initCustomTimerModal();

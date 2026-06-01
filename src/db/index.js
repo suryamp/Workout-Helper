@@ -26,3 +26,5 @@ export {
   getHistory,
   deleteHistoryEntry,
 }                                           from './logs.js';
+
+export { recoverIfNeeded }                  from './recovery.js';

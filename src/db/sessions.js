@@ -9,6 +9,8 @@
 // ══════════════════════════════════════════
 
 import { getLogicalDay as _getLogicalDay } from '../utils/time.js';
+import { capture, Events }                from '../telemetry.js';
+import { BACKUP_KEY }                     from './recovery.js';
 import {
   STORE_LOGS,
   STORE_ACTIVE,
@@ -132,6 +134,19 @@ export async function completeSession(day, session) {
     };
     txn.onerror = () => reject(txn.error);
     txn.onabort = () => reject(txn.error ?? new Error('completeSession: transaction aborted'));
+  }).catch(err => {
+    // IDB transaction failed — back up to localStorage so recoverIfNeeded()
+    // can replay this session on the next startup. Data is never silently lost.
+    try {
+      localStorage.setItem(BACKUP_KEY, JSON.stringify({
+        day,
+        session,
+        logs: toFlush,
+        ts:   Date.now(),
+      }));
+      capture(Events.SESSION_BACKUP, { day, error: err?.message });
+    } catch { /* localStorage also unavailable — nothing we can do */ }
+    throw err;
   });
 }
 

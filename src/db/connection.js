@@ -198,3 +198,14 @@ export function _requireDB() {
   if (!_db) throw new Error('[WorkoutDB] call initDB() first');
   return _db;
 }
+
+/**
+ * Close and discard the cached connection.
+ * Call this in test beforeEach after replacing globalThis.indexedDB with a
+ * fresh IDBFactory so each test gets a clean database.
+ * Never call this in production code.
+ */
+export function _resetDB() {
+  if (_db) { try { _db.close(); } catch { /* already closed */ } }
+  _db = null;
+}
