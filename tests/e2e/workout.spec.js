@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 // Full workout flow: complete a heavy-a session and verify session details.
-// On a fresh IndexedDB, getNextDay() returns 'heavy-a' so the app boots there.
+// On a fresh IndexedDB, getNextDay() returns 'heavy-a' so the home screen
+// shows it as the "Up Next" card.
 
 // renderDay() replaces the entire page container's innerHTML on each step,
 // which detaches DOM nodes and breaks Playwright's actionability checks.
@@ -14,6 +15,14 @@ const tap = (page, sel) => page.evaluate(
 
 test('complete a workout and verify session details', async ({ page }) => {
   await page.goto('/');
+
+  // Wait for home screen to render (day cards appear after boot completes)
+  await page.waitForFunction(
+    () => !!document.querySelector('.home-day-card')
+  );
+
+  // Click the first day card (the "Up Next" recommended day)
+  await page.evaluate(() => document.querySelector('.home-day-card')?.click());
 
   // The boot sequence (initDB → renderAllDays → navigateToNextDay) is async.
   // Wait until the active page has a Next/Finish button before interacting.

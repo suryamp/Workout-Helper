@@ -13,10 +13,10 @@
 // ══════════════════════════════════════════
 
 import { initDB, recoverIfNeeded }       from './db/index.js';
-import { initTelemetry, capture, Events } from './telemetry.js';
+import { initTelemetry, capture, Events, getLog, clearLog } from './telemetry.js';
 import { EXERCISES }                     from './data/exercises.js';
 import { DAYS }                          from './data/days.js';
-import { stageSetLog }                   from './db/index.js';
+import { stageSetLog, getSessionHistory } from './db/index.js';
 import {
   maybeStartSession,
   abandonSession,
@@ -49,6 +49,8 @@ import { deleteSession, shareSession }         from './ui/history.js';
 import { openSessionDetail, closeSessionDetail } from './ui/sessionDetail.js';
 import { showPage, setActiveTab }              from './ui/nav.js';
 import { shareText, buildShareText }           from './ui/share.js';
+import { renderHome }                          from './ui/home.js';
+import { initMenu, openMenu, closeMenu }       from './ui/menu.js';
 
 // ── Save + Advance ──────────────────────
 
@@ -108,6 +110,113 @@ function openWeightModal(uid) {
   _openWeightModal(uid, getState(uid));
 }
 
+// ── Home + navigation ────────────────────
+
+async function startDay(day) {
+  await showPage(day, null);
+}
+
+async function showHome() {
+  const nextDay = await getNextDay();
+  await renderHome(nextDay);
+  await showPage('home', null);
+}
+
+// ── Menu item handlers ───────────────────
+
+async function menuHistory() {
+  closeMenu();
+  await showPage('history', null);
+}
+
+async function menuTrends() {
+  closeMenu();
+  const cnt = document.getElementById('cnt-trends');
+  if (cnt) cnt.innerHTML = `<div class="sec-label">Trends</div><div class="empty">Coming soon.</div>`;
+  await showPage('trends', null);
+}
+
+async function menuSettings() {
+  closeMenu();
+  const cnt = document.getElementById('cnt-settings');
+  if (cnt) cnt.innerHTML = `<div class="sec-label">Settings</div><div class="empty">Coming soon.</div>`;
+  await showPage('settings', null);
+}
+
+async function menuDebug() {
+  closeMenu();
+  _renderDebugPage();
+  await showPage('debug', null);
+}
+
+function _renderDebugPage() {
+  const cnt = document.getElementById('cnt-debug');
+  if (!cnt) return;
+  const entries = getLog();
+  if (entries.length === 0) {
+    cnt.innerHTML = `
+      <div class="sec-label">Debug Log</div>
+      <div class="empty">No telemetry entries.</div>`;
+    return;
+  }
+  const rows = entries.slice().reverse().map(e => `
+    <div class="debug-entry">
+      <div class="debug-event">${e.event}</div>
+      <div class="debug-ts">${new Date(e.ts).toLocaleString()}</div>
+      <pre class="debug-data">${JSON.stringify(e.data, null, 2)}</pre>
+    </div>`).join('');
+  cnt.innerHTML = `
+    <div class="sec-label">Debug Log</div>
+    <button class="menu-item-btn debug-clear-btn" onclick="clearDebugLog()">Clear Log</button>
+    <div class="debug-entries">${rows}</div>`;
+}
+
+function clearDebugLog() {
+  clearLog();
+  _renderDebugPage();
+}
+
+async function menuExport() {
+  closeMenu();
+  const data = await getSessionHistory({ limit: 365 });
+  const blob  = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url   = URL.createObjectURL(blob);
+  const a     = document.createElement('a');
+  a.href      = url;
+  a.download  = `workout-export-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function menuAbout() {
+  closeMenu();
+  const cnt = document.getElementById('cnt-about');
+  if (cnt) cnt.innerHTML = `
+    <div class="sec-label">About</div>
+    <div class="about-card">
+      <div class="about-app-name">Workout Tracker</div>
+      <div class="about-app-desc">A mobile-first PWA for tracking a 4-day strength program.</div>
+    </div>
+    <div class="about-card">
+      <div class="about-section-title">The Program</div>
+      <div class="about-row"><span class="about-key">Heavy A</span><span class="about-val">Squat · Bench · Row focus</span></div>
+      <div class="about-row"><span class="about-key">Acc A</span><span class="about-val">Cable · Accessory work</span></div>
+      <div class="about-row"><span class="about-key">Heavy B</span><span class="about-val">OHP · Deadlift · Press focus</span></div>
+      <div class="about-row"><span class="about-key">Acc B</span><span class="about-val">Rotator · Core · Curls</span></div>
+    </div>
+    <div class="about-card">
+      <div class="about-section-title">Progression</div>
+      <div class="about-body">Weight increases automatically when you hit your target reps for the required number of consecutive sessions. Compounds move up after one success; accessories need two or three in a row.</div>
+    </div>
+    <div class="about-card">
+      <div class="about-section-title">Your Data</div>
+      <div class="about-body">Everything is stored locally on this device using IndexedDB. No account, no server, no tracking. Use Export Data in this menu to back up your sessions as JSON.</div>
+      <div class="about-row" style="margin-top:10px"><span class="about-key">Day boundary</span><span class="about-val">3 AM cutoff</span></div>
+      <div class="about-row"><span class="about-key">History kept</span><span class="about-val">Last 365 sessions</span></div>
+    </div>`;
+  await showPage('about', null);
+}
+
 // ── Boot ────────────────────────────────
 
 function _showStorageError(err) {
@@ -147,6 +256,7 @@ function _showStorageError(err) {
   initWeightModal();
   initCustomTimerModal();
   initRestartModal();
+  initMenu();
 
   await reconcileStaleSessions();
 
@@ -160,8 +270,8 @@ function _showStorageError(err) {
   allDays.forEach(day => setVirtualIdx(day, DAYS[day].warmup ? -1 : 0));
   await Promise.all(allDays.map(day => renderDay(day)));
 
-  await showPage(nextDay, null);
-  setActiveTab(nextDay);
+  await renderHome(nextDay);
+  await showPage('home', null);
 })();
 
 // ══════════════════════════════════════════
@@ -172,6 +282,8 @@ function _showStorageError(err) {
 Object.assign(window, {
   // Navigation
   showPage,
+  showHome,
+  startDay,
   // Workout flow
   saveAndAdvance,
   advanceDay,
@@ -207,4 +319,14 @@ Object.assign(window, {
       setTimeout(() => toast.remove(), 2000);
     }
   },
+  // Menu
+  openMenu,
+  closeMenu,
+  menuHistory,
+  menuTrends,
+  menuSettings,
+  menuDebug,
+  menuExport,
+  menuAbout,
+  clearDebugLog,
 });

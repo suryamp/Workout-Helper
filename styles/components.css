@@ -364,3 +364,55 @@
 
 /* Loading state */
 .detail-loading{padding:40px 20px;text-align:center;color:var(--text3);font-size:13px;}
+
+
+/* ══════════════════════════════════════════
+   HOME — day cards
+══════════════════════════════════════════ */
+.home-day-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;cursor:pointer;transition:background .15s,border-color .15s;-webkit-tap-highlight-color:transparent;}
+.home-day-card:active{background:var(--surface2);}
+.home-day-card-next{border-color:rgba(200,240,67,.4);background:linear-gradient(135deg,rgba(200,240,67,.06),rgba(200,240,67,.02));}
+.home-day-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.home-day-label{font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text);}
+.home-next-badge{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0a0a0f;background:var(--accent);border-radius:5px;padding:3px 8px;flex-shrink:0;}
+.home-day-last{font-size:12px;color:var(--text3);}
+
+
+/* ══════════════════════════════════════════
+   MENU — hamburger bottom sheet
+══════════════════════════════════════════ */
+.menu-overlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:0;}
+.menu-overlay.open{display:flex;}
+.menu-sheet{background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl) var(--rl) 0 0;width:100%;max-width:520px;padding-bottom:env(safe-area-inset-bottom,0);animation:sheet-up .28s cubic-bezier(.4,0,.2,1);}
+.menu-items{padding:8px 20px 4px;}
+.menu-item-btn{display:block;width:100%;background:none;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:inherit;font-size:16px;font-weight:600;padding:16px 0;cursor:pointer;text-align:left;transition:color .15s;}
+.menu-item-btn:last-child{border-bottom:none;}
+.menu-item-btn:active{color:var(--accent);}
+.menu-item-stub{color:var(--text3);}
+.menu-close-btn{display:block;width:100%;background:var(--surface2);border:none;border-top:1px solid var(--border2);color:var(--text2);font-family:inherit;font-size:14px;font-weight:700;padding:16px;cursor:pointer;transition:background .15s;}
+.menu-close-btn:active{background:var(--surface3);}
+
+
+/* ══════════════════════════════════════════
+   DEBUG page
+══════════════════════════════════════════ */
+.debug-entries{padding-bottom:32px;}
+.debug-clear-btn{margin-bottom:12px;border-bottom:1px solid var(--border) !important;}
+.debug-entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+.debug-event{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;}
+.debug-ts{font-size:11px;color:var(--text3);margin-bottom:6px;}
+.debug-data{font-size:11px;color:var(--text2);white-space:pre-wrap;word-break:break-all;background:var(--surface2);border-radius:8px;padding:8px;margin:0;font-family:inherit;}
+
+
+/* ══════════════════════════════════════════
+   ABOUT page
+══════════════════════════════════════════ */
+.about-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;margin-bottom:12px;}
+.about-app-name{font-size:20px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin-bottom:6px;}
+.about-app-desc{font-size:13px;color:var(--text2);line-height:1.5;}
+.about-section-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;}
+.about-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--border);}
+.about-row:last-child{border-bottom:none;}
+.about-key{font-size:13px;font-weight:600;color:var(--text2);}
+.about-val{font-size:12px;color:var(--text3);text-align:right;}
+.about-body{font-size:13px;color:var(--text2);line-height:1.6;}

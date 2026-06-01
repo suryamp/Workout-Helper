@@ -19,21 +19,22 @@
 
 <nav class="nav">
   <div class="nav-inner">
-    <button class="nav-logo" data-page="history"
-            onclick="showPage('history',event)" title="History"
-            style="background:none;border:none;cursor:pointer;padding:14px 8px 12px 0;font-size:18px;">💪</button>
-    <button class="nav-tab active" data-page="heavy-a" onclick="showPage('heavy-a',event)">Heavy A</button>
-    <button class="nav-tab"        data-page="acc-a"   onclick="showPage('acc-a',event)">Aux A</button>
-    <button class="nav-tab"        data-page="heavy-b" onclick="showPage('heavy-b',event)">Heavy B</button>
-    <button class="nav-tab"        data-page="acc-b"   onclick="showPage('acc-b',event)">Aux B</button>
+    <button class="nav-back-btn" id="nav-back" onclick="showHome()" style="visibility:hidden">←</button>
+    <span class="nav-title" id="nav-title">Workout</span>
+    <button class="nav-menu-btn" onclick="openMenu()">☰</button>
   </div>
 </nav>
 
-<div id="page-heavy-a"  class="page active"><div class="container" id="cnt-heavy-a"></div></div>
+<div id="page-home"     class="page active"><div class="container" id="cnt-home"></div></div>
+<div id="page-heavy-a"  class="page"><div class="container" id="cnt-heavy-a"></div></div>
 <div id="page-acc-a"    class="page"><div class="container" id="cnt-acc-a"></div></div>
 <div id="page-heavy-b"  class="page"><div class="container" id="cnt-heavy-b"></div></div>
 <div id="page-acc-b"    class="page"><div class="container" id="cnt-acc-b"></div></div>
 <div id="page-history"  class="page"><div class="container" id="cnt-history"></div></div>
+<div id="page-debug"    class="page"><div class="container" id="cnt-debug"></div></div>
+<div id="page-trends"   class="page"><div class="container" id="cnt-trends"></div></div>
+<div id="page-settings" class="page"><div class="container" id="cnt-settings"></div></div>
+<div id="page-about"    class="page"><div class="container" id="cnt-about"></div></div>
 
 <script type="module" src="src/main.js"></script>
 <script>
