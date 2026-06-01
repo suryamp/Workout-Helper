@@ -13,12 +13,23 @@ A mobile-first PWA for tracking a 4-day strength program. Vanilla JS ES modules,
 ## Running locally
 
 ```bash
-python3 -m http.server 8080
-# or
-npx serve .
+npm run dev
+# or: python3 -m http.server 8080
 ```
 
 IndexedDB requires an HTTP origin — do not open `index.html` directly via `file://`.
+
+---
+
+## Running tests
+
+```bash
+npm run test:run      # single pass, what CI runs
+npm test              # watch mode for active development
+npm run test:coverage # coverage report
+```
+
+Tests live in `tests/` mirroring the `src/` structure. Always run `npm run test:run` after making changes and before committing — the pre-commit hook enforces this automatically. If a change breaks an existing test, fix the test or the code before proceeding; do not skip the hook with `--no-verify`.
 
 ---
 
