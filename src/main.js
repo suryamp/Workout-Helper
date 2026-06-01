@@ -43,7 +43,7 @@ import {
   openRestartModal,
   closeRestartModal,
 }                                        from './ui/modals.js';
-import { tapPill, lockNextSet }          from './state/setWidget.js';
+import { tapPill }                        from './state/setWidget.js';
 import { deleteEntry }                   from './ui/history.js';
 import { showPage, setActiveTab }        from './ui/nav.js';
 
@@ -60,12 +60,11 @@ async function saveAndAdvance(day) {
     const s   = getState(uid);
     if (!s) return;
 
+    // Save every pill the user touched (locked or mid-debounce) so that
+    // tapping Next right after a tap doesn't silently drop that set.
     const sets = s.pills
-      .filter(p => p.locked)
+      .filter(p => p.reps !== null)
       .map(p => ({ weight: String(p.weight ?? s.weight ?? 0), reps: String(p.reps) }));
-
-    const pendingPill = s.pills.find(p => p.reps !== null && !p.locked);
-    if (pendingPill) sets.push({ weight: String(s.weight || 0), reps: String(pendingPill.reps) });
     if (sets.length === 0) return;
 
     stageSetLog(day, {
@@ -156,7 +155,6 @@ Object.assign(window, {
   customTimer,
   // Set widget
   tapPill,
-  lockNextSet,
   // History
   deleteEntry,
 });

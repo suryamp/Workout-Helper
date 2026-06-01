@@ -10,12 +10,12 @@
 
 
 /* TIMER */
-.timer-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-bottom:16px;}
+.timer-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:6px 16px 10px 16px;margin-bottom:16px;}
 .timer-lbl{font-size:25px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;justify-content:center;text-align:center;}
 .timer-display{font-size:46px;font-weight:700;color:var(--accent);letter-spacing:-.02em;line-height:1;margin-bottom:10px;font-variant-numeric:tabular-nums;text-align:center;}
-.timer-display.urgent{color:var(--ss);}
+.timer-display.overtime{color:var(--ss);}
 .timer-display.done{color:var(--text3);}
-.timer-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;}
+.timer-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
 .t-pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;font-weight:600;padding:7px 4px;cursor:pointer;transition:background .15s,color .15s,border-color .15s;}
 .t-pre:hover,.t-pre.tp-active{background:var(--surface3);color:var(--accent);border-color:rgba(200,240,67,.3);}
 .t-pre small{display:block;font-size:9px;color:var(--text3);margin-top:1px;}
@@ -143,30 +143,28 @@
    SET WIDGET — pill buttons + weight chip
 ══════════════════════════════════════════ */
 
-/* Weight row */
-.sw-weight-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+/* Weight + pills — single row */
+.sw-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 
-.weight-chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface2);border:0px solid var(--border2);border-radius:10px;padding:9px 30px;cursor:pointer;font-family:inherit;transition:border-color .18s,background .18s;-webkit-tap-highlight-color:transparent;margin-left:auto;margin-right:auto;}
+.weight-chip{display:inline-flex;align-items:center;background:var(--surface2);border:0px solid var(--border2);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:inherit;transition:border-color .18s,background .18s;-webkit-tap-highlight-color:transparent;flex-shrink:0;}
 .weight-chip:active{opacity:.75;}
 .weight-chip:hover{border-color:rgba(200,240,67,.4);background:var(--surface3);}
 .weight-chip-empty{border:1px;border-style:dashed;border-color:var(--border2);}
-.weight-chip-val{font-size:35px;font-weight:700;color:var(--text);letter-spacing:.02em;}
+.weight-chip-val{font-size:20px;font-weight:700;color:var(--text);letter-spacing:.02em;}
 .weight-chip-empty .weight-chip-val{color:var(--text3);}
 
-.sets-done-badge{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:rgba(200,240,67,.1);border:1px solid rgba(200,240,67,.25);border-radius:6px;padding:3px 8px;}
-
-/* Pills row */
-.sw-pills{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+/* Pills row — fills remaining space beside weight chip */
+.sw-pills{display:flex;gap:6px;flex:1;flex-wrap:wrap;}
 
 .set-pill{
   flex:1;min-width:0;
-  height:30px;
-  border-radius:12px;
+  height:36px;
+  border-radius:10px;
   border:1.5px solid var(--border2);
   background:var(--surface2);
   color:var(--text3);
   font-family:inherit;
-  font-size:13px;font-weight:700;
+  font-size:15px;font-weight:700;
   cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   transition:background .15s,border-color .15s,color .15s,transform .1s;
@@ -176,60 +174,32 @@
 }
 .set-pill:active{transform:scale(.93);}
 
-/* Empty — not yet tapped */
-.pill-empty{
-  border-style:dashed;
-  color:var(--text3);
-}
-.pill-empty .pill-num{opacity:.35;font-size:20px;}
+/* Empty — not yet tapped; shows target reps dimly */
+.pill-empty{border-style:dashed;}
+.pill-empty .pill-num{opacity:.3;}
 
-/* Pending — tapped, shows reps, awaiting "Start New Set" */
+/* Pending — tapped, debounce counting down */
 .pill-pending{
-  border-color:rgba(200,240,67,.5);
-  background:rgba(200,240,67,.08);
+  border-color:rgba(200,240,67,.6);
+  background:rgba(200,240,67,.1);
   color:var(--accent);
+  animation:pill-countdown 1.5s ease-out forwards;
 }
-.pill-pending .pill-num{font-size:20px;}
 
-/* Locked — confirmed via "Start New Set" */
+/* Locked — debounce fired, set confirmed */
 .pill-locked{
-  border-color:rgba(200,240,67,.25);
+  border-color:rgba(200,240,67,.3);
   background:rgba(200,240,67,.12);
   color:var(--accent);
 }
 .pill-locked::after{
   content:'✓';
   position:absolute;
-  top:4px;right:6px;
+  top:3px;right:5px;
   font-size:8px;
   color:var(--accent);
-  opacity:.6;
+  opacity:.55;
 }
-.pill-locked .pill-num{font-size:18px;}
-
-/* "Start New Set" button */
-.btn-new-set{
-  width:100%;
-  background:var(--surface2);
-  border:1.5px dashed var(--border2);
-  border-radius:10px;
-  color:var(--text3);
-  font-family:inherit;
-  font-size:12px;font-weight:700;
-  letter-spacing:.06em;text-transform:uppercase;
-  padding:12px;
-  cursor:not-allowed;
-  transition:background .18s,border-color .18s,color .18s;
-  margin-top:4px;
-}
-.btn-new-set-ready{
-  background:rgba(200,240,67,.1);
-  border-color:rgba(200,240,67,.45);
-  border-style:solid;
-  color:var(--accent);
-  cursor:pointer;
-}
-.btn-new-set-ready:active{opacity:.75;}
 
 
 /* ══════════════════════════════════════════

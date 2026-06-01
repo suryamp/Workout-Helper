@@ -71,7 +71,7 @@ async function exCardInner(key, uid) {
   const numSets    = ex.sets ?? 3;
 
   const badgeHTML = prog.badge
-    ? `<div class="weight-badge${prog.badge.includes('🚀') ? ' pending' : ''}"> · ${prog.badge}</div>`
+    ? `<div class="weight-badge${prog.badge.includes('🚀') ? ' pending' : ''}">  · ${prog.badge}</div>`
     : '';
 
   const levelUpHTML = prog.levelUp ? `
@@ -81,8 +81,6 @@ async function exCardInner(key, uid) {
       <span class="levelup-delta">+${prog.increment} lbs</span>
     </div>` : '';
 
-  // Pass exKey and exName so initSetState stores them; lockNextSet uses exKey
-  // for getSmartTimer, and the weight modal uses exName for its title.
   initSetState(uid, numSets, prog.suggestedWeight, targetReps, key, ex.displayName);
 
   return `
@@ -193,9 +191,7 @@ export async function renderDay(day) {
 
     let levelUpHTML = '';
     if (levelUps.length > 0) {
-      const title = levelUps.length === 1
-        ? '⬆ New weight unlocked'
-        : `⬆ ${levelUps.length} new weights unlocked`;
+      const title = '⬆ New weight unlocked';
       const rows = levelUps.map(lu => `
         <div class="warmup-row">
           <span class="wn">${lu.name}</span>

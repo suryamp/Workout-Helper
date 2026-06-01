@@ -13,3 +13,10 @@
   0%   { background: rgba(200,240,67,.12); }
   100% { background: var(--surface); }
 }
+
+/* Plays on pill-pending for the duration of the auto-lock debounce.
+   The border brightens then settles, giving a visual "counting down" cue. */
+@keyframes pill-countdown {
+  0%   { border-color: rgba(200,240,67,.9); background: rgba(200,240,67,.18); }
+  100% { border-color: rgba(200,240,67,.6); background: rgba(200,240,67,.1);  }
+}
