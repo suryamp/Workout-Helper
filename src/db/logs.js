@@ -3,8 +3,8 @@
 //  Set-log queries: progression data computation and workout history.
 // ══════════════════════════════════════════
 
-import { EXERCISES }              from '../data/exercises.js';
-import { STORE_LOGS, _requireDB, _idbWrite } from './connection.js';
+import { EXERCISES }                              from '../data/exercises.js';
+import { STORE_LOGS, STORE_COMPLETED, _requireDB, _idbWrite, _promisify } from './connection.js';
 
 // ─── getProgressionData ──────────────────────────────────────────────────────
 
@@ -121,6 +121,97 @@ export async function getHistory({ includeSeeded = false, limit = 40, exerciseKe
 export async function deleteHistoryEntry(id) {
   const db = _requireDB();
   await _idbWrite(db, STORE_LOGS, store => store.delete(id));
+}
+
+// ─── Session history ─────────────────────────────────────────────────────────
+
+/**
+ * Return the `limit` most-recent completed sessions, each bundled with their
+ * set-logs (fetched via the by_session index — no join needed) and pre-computed
+ * total volume.
+ *
+ * @param {{ limit?: number }} [opts]
+ * @returns {Promise<{ session: object, logs: object[], volume: number }[]>}
+ */
+export async function getSessionHistory({ limit = 20 } = {}) {
+  const db         = _requireDB();
+  const txn        = db.transaction([STORE_LOGS, STORE_COMPLETED], 'readonly');
+  const logIndex   = txn.objectStore(STORE_LOGS).index('by_session');
+  const sessIndex  = txn.objectStore(STORE_COMPLETED).index('by_completedAt');
+
+  const sessions = await _promisify(sessIndex.getAll());
+  sessions.sort((a, b) => b.completedAt - a.completedAt);
+  const recent = sessions.slice(0, limit);
+
+  const results = await Promise.all(recent.map(async session => {
+    const logs = await _promisify(
+      db.transaction(STORE_LOGS, 'readonly')
+        .objectStore(STORE_LOGS)
+        .index('by_session')
+        .getAll(IDBKeyRange.only(session.startedAt))
+    );
+    const volume = computeVolume(logs);
+    return { session, logs, volume };
+  }));
+
+  return results;
+}
+
+/**
+ * Return all set-logs for a single session.
+ * @param {number} sessionId — session.startedAt
+ * @returns {Promise<object[]>}
+ */
+export async function getLogsForSession(sessionId) {
+  const db = _requireDB();
+  return _promisify(
+    db.transaction(STORE_LOGS, 'readonly')
+      .objectStore(STORE_LOGS)
+      .index('by_session')
+      .getAll(IDBKeyRange.only(sessionId))
+  );
+}
+
+/**
+ * Atomically delete a completed session and all its set-logs.
+ * @param {number} startedAt — session primary key / sessionId
+ */
+export async function deleteSession(startedAt) {
+  const db = _requireDB();
+  await new Promise((resolve, reject) => {
+    const txn        = db.transaction([STORE_LOGS, STORE_COMPLETED], 'readwrite');
+    const logStore   = txn.objectStore(STORE_LOGS);
+    const sessStore  = txn.objectStore(STORE_COMPLETED);
+
+    // Delete all logs for this session via cursor on the by_session index.
+    const req = logStore.index('by_session').openCursor(IDBKeyRange.only(startedAt));
+    req.onsuccess = e => {
+      const cursor = e.target.result;
+      if (!cursor) return;
+      cursor.delete();
+      cursor.continue();
+    };
+
+    sessStore.delete(startedAt);
+
+    txn.oncomplete = resolve;
+    txn.onerror    = () => reject(txn.error);
+    txn.onabort    = () => reject(txn.error ?? new Error('deleteSession: aborted'));
+  });
+}
+
+/**
+ * Total lifted volume for a set of logs: sum of weight × reps across all sets.
+ * Bodyweight exercises (weight 0) are excluded from the total.
+ * @param {object[]} logs
+ * @returns {number}
+ */
+export function computeVolume(logs) {
+  return logs.reduce((total, log) =>
+    total + log.sets.reduce((sum, s) =>
+      sum + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0)
+    , 0)
+  , 0);
 }
 
 // ─── Internal helpers ────────────────────────────────────────────────────────

@@ -101,16 +101,31 @@
 .weight-badge.pending{color:var(--text3);}
 
 
-/* HISTORY */
-.hist-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px;}
-.hist-ex{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
-.hist-day{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent2);background:rgba(123,111,240,.12);border:1px solid rgba(123,111,240,.2);border-radius:6px;padding:2px 7px;margin-bottom:6px;}
-.hist-sets{font-size:12px;color:var(--text2);margin-bottom:4px;}
-.hist-footer{display:flex;justify-content:space-between;align-items:center;}
-.hist-date{font-size:11px;color:var(--text3);}
+/* HISTORY — session cards */
+.hist-day{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent2);background:rgba(123,111,240,.12);border:1px solid rgba(123,111,240,.2);border-radius:6px;padding:2px 7px;}
 .del-btn{background:none;border:1px solid rgba(240,67,112,.25);border-radius:6px;color:rgba(240,67,112,.6);font-family:inherit;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;}
 .del-btn:hover{background:rgba(240,67,112,.1);color:var(--ss);}
 .empty{font-size:13px;color:var(--text3);text-align:center;padding:40px 0;}
+
+.session-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:10px;position:relative;overflow:hidden;}
+.session-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),transparent);}
+.session-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;}
+.session-header-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.session-volume{font-size:13px;font-weight:700;color:var(--accent);}
+.session-date{font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;margin-top:auto;margin-bottom:auto;}
+.session-exercises{border-top:1px solid var(--border);padding-top:10px;margin-bottom:12px;}
+.session-ex-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;gap:8px;}
+.session-ex-name{font-size:12px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.session-ex-detail{font-size:11px;color:var(--text3);white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.session-ex-dots{display:flex;gap:2px;}
+.rep-dot{font-size:8px;}
+.dot-hit{color:var(--accent);}
+.dot-miss{color:#f0a843;}
+.dot-fail{color:var(--ss);}
+.session-actions{display:flex;justify-content:space-between;align-items:center;}
+.share-btn{background:rgba(200,240,67,.08);border:1px solid rgba(200,240,67,.25);border-radius:8px;color:var(--accent);font-family:inherit;font-size:11px;font-weight:700;padding:6px 12px;cursor:pointer;transition:background .15s;}
+.share-btn:active{opacity:.75;}
+.share-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface3);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:600;padding:10px 20px;z-index:999;pointer-events:none;animation:saved-flash .3s ease-out;}
 
 
 /* FINISHER */
@@ -128,7 +143,10 @@
 .day-done{text-align:center;padding:40px 20px;}
 .done-big{font-size:48px;margin-bottom:12px;}
 .done-msg{font-size:14px;color:var(--text2);line-height:1.6;}
-.restart-btn{margin-top:20px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:12px 24px;cursor:pointer;}
+.done-volume{font-size:16px;font-weight:700;color:var(--accent);margin-top:12px;}
+.done-actions{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:20px;}
+.share-btn-done{font-size:13px;padding:10px 24px;}
+.restart-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:12px 24px;cursor:pointer;}
 
 /* Level-up summary card on done screen */
 .levelup-summary{margin-top:24px;text-align:left;background:linear-gradient(135deg,#0f1f0f,#111a0e,#0d1a12);border-color:rgba(200,240,67,.35);}
@@ -144,7 +162,7 @@
 ══════════════════════════════════════════ */
 
 /* Weight + pills — single row */
-.sw-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.sw-row{display:flex;align-items:center;gap:8px;}
 
 .weight-chip{display:inline-flex;align-items:center;background:var(--surface2);border:0px solid var(--border2);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:inherit;transition:border-color .18s,background .18s;-webkit-tap-highlight-color:transparent;flex-shrink:0;}
 .weight-chip:active{opacity:.75;}

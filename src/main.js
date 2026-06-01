@@ -44,9 +44,10 @@ import {
   openRestartModal,
   closeRestartModal,
 }                                        from './ui/modals.js';
-import { tapPill }                        from './state/setWidget.js';
-import { deleteEntry }                   from './ui/history.js';
-import { showPage, setActiveTab }        from './ui/nav.js';
+import { tapPill }                              from './state/setWidget.js';
+import { deleteSession, shareSession }         from './ui/history.js';
+import { showPage, setActiveTab }              from './ui/nav.js';
+import { shareText, buildShareText }           from './ui/share.js';
 
 // ── Save + Advance ──────────────────────
 
@@ -187,6 +188,19 @@ Object.assign(window, {
   customTimer,
   // Set widget
   tapPill,
-  // History
-  deleteEntry,
+  // History + share
+  deleteSession,
+  shareSession,
+  shareDoneScreen: async (encodedPayload) => {
+    const { session, logs, levelUps } = JSON.parse(decodeURIComponent(encodedPayload));
+    const text   = buildShareText(session, logs, levelUps);
+    const result = await shareText(text);
+    if (result === 'copied') {
+      const toast = document.createElement('div');
+      toast.className   = 'share-toast';
+      toast.textContent = 'Copied!';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    }
+  },
 });

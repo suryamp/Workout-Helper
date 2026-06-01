@@ -98,9 +98,10 @@ export async function completeSession(day, session) {
     const activeStore    = txn.objectStore(STORE_ACTIVE);
     const completedStore = txn.objectStore(STORE_COMPLETED);
 
-    // 1. Write all staged set-logs for this session.
+    // 1. Write all staged set-logs, stamping each with the session's startedAt
+    //    as the sessionId FK so getSessionHistory() can do a direct index lookup.
     for (const entry of toFlush) {
-      logStore.add(entry);   // autoIncrement assigns `id`
+      logStore.add({ ...entry, sessionId: session.startedAt });
     }
 
     // 2. Move session from active → completed.

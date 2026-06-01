@@ -6,10 +6,12 @@
 
 import { EXERCISES }                     from '../data/exercises.js';
 import { DAYS }                          from '../data/days.js';
-import { getProgressionData }            from '../db/index.js';
+import { getProgressionData, getLogsForSession, computeVolume } from '../db/index.js';
+import { getCompletedSessions }          from '../db/index.js';
 import { initSetState, renderSetWidget, getState } from '../state/setWidget.js';
 import { completeSession }               from '../state/session.js';
 import { REST_DEFAULTS }                 from '../ui/timer.js';
+import { buildShareText }                from '../ui/share.js';
 
 // ── Carousel index ──────────────────────
 const _carouselIdx = {};
@@ -87,7 +89,7 @@ async function exCardInner(key, uid) {
     <div class="ex-header">
       <div class="ex-meta">
         <div class="ex-name">${ex.displayName}</div>
-        <div class="ex-sets-lbl">${numSets} sets · ${targetReps} reps${badgeHTML}</div>
+        <div class="ex-sets-lbl">${numSets} sets · ${targetReps} reps ${badgeHTML}</div>
         ${ex.notes ? `<div class="ex-notes">${ex.notes}</div>` : ''}
       </div>
       ${vid
@@ -189,9 +191,26 @@ export async function renderDay(day) {
       .map((k, i) => ({ key: k, name: exName(k), ...progData[i] }))
       .filter(e => e.levelUp);
 
+    // Fetch this session's logs for volume + share text.
+    const allCompleted  = await getCompletedSessions();
+    const thisSession   = allCompleted.find(s => s.day === day) ?? null;
+    const sessionLogs   = thisSession ? await getLogsForSession(thisSession.startedAt) : [];
+    const volume        = computeVolume(sessionLogs);
+    const volStr        = volume > 0
+      ? `<div class="done-volume">📦 ${Math.round(volume).toLocaleString()} lbs lifted</div>`
+      : '';
+
+    const sharePayload = thisSession
+      ? encodeURIComponent(JSON.stringify({
+          session: { day: thisSession.day, startedAt: thisSession.startedAt, completedAt: thisSession.completedAt },
+          logs:    sessionLogs.map(l => ({ exerciseKey: l.exerciseKey, exerciseName: l.exerciseName, sets: l.sets })),
+          levelUps,
+        }))
+      : null;
+
     let levelUpHTML = '';
     if (levelUps.length > 0) {
-      const title = '⬆ New weight unlocked';
+      const title = levelUps.length === 1 ? '⬆ New weight unlocked' : `⬆ ${levelUps.length} new weights unlocked`;
       const rows = levelUps.map(lu => `
         <div class="warmup-row">
           <span class="wn">${lu.name}</span>
@@ -203,11 +222,19 @@ export async function renderDay(day) {
       </div>`;
     }
 
+    const shareBtn = sharePayload
+      ? `<button class="share-btn share-btn-done" onclick="shareDoneScreen('${sharePayload}')">📤 Share workout</button>`
+      : '';
+
     html += `<div class="day-done">
       <div class="done-big">🎉</div>
       <div class="done-msg">${data.label} complete!<br>You showed up. That's the job.</div>
+      ${volStr}
       ${levelUpHTML}
-      <button class="restart-btn" onclick="openRestartModal('${day}')">Restart Workout</button>
+      <div class="done-actions">
+        ${shareBtn}
+        <button class="restart-btn" onclick="openRestartModal('${day}')">Restart Workout</button>
+      </div>
     </div>`;
     cnt.innerHTML = html;
     return;

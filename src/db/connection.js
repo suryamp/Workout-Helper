@@ -10,7 +10,7 @@ import { EXERCISES } from '../data/exercises.js';
 // ─── Schema constants ────────────────────────────────────────────────────────
 
 const DB_NAME    = 'WorkoutDB';
-const SCHEMA_VER = 1;
+const SCHEMA_VER = 2;
 
 export const STORE_LOGS      = 'setLogs';
 export const STORE_ACTIVE    = 'activeSessions';
@@ -98,8 +98,13 @@ export function initDB() {
         _seedDefaultWeights(txn);
       }
 
-      // ── v2 delta would go here ─────────────────────────────────────────
-      // if (event.oldVersion < 2) { ... }
+      // ── v2: sessionId foreign key on set-logs ─────────────────────────
+      if (event.oldVersion < 2) {
+        // Add by_session index so getSessionHistory() can fetch all logs for
+        // a session via a direct index lookup instead of a full-table scan.
+        // Pre-v2 logs lack sessionId and will simply be absent from this index.
+        txn.objectStore(STORE_LOGS).createIndex('by_session', 'sessionId', { unique: false });
+      }
     };
 
     req.onsuccess = (event) => {

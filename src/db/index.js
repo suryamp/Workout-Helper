@@ -25,6 +25,10 @@ export {
   getProgressionData,
   getHistory,
   deleteHistoryEntry,
+  getSessionHistory,
+  getLogsForSession,
+  deleteSession,
+  computeVolume,
 }                                           from './logs.js';
 
 export { recoverIfNeeded }                  from './recovery.js';
