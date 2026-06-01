@@ -5,6 +5,7 @@
 
 import { EXERCISES }  from '../data/exercises.js';
 import { DAY_LABELS } from '../data/days.js';
+import { getVolumeAnimal } from '../data/volumeAnimals.js';
 
 /**
  * Emoji grade for a single set.
@@ -56,17 +57,19 @@ export function buildShareText(session, logs, levelUps = []) {
     , 0)
   , 0);
 
-  const volLine     = volume > 0 ? `📦 ${Math.round(volume).toLocaleString()} lbs total` : '';
-  const levelUpLines = levelUps
-    .map(lu => `⬆ ${lu.name} → ${lu.suggestedWeight} lbs`)
-    .join('\n');
+  const volLine = volume > 0 ? `📦 ${Math.round(volume).toLocaleString()} lbs total` : '';
+  const animalLine  = volume > 0 ? (() => {
+    const a       = getVolumeAnimal(volume);
+    const article = /^the /i.test(a.name) ? '' : /^[AEIOUaeiou]/.test(a.name) ? 'an ' : 'a ';
+    return `\nThat's the weight of ${article}${a.name} ${a.emoji}`;
+  })() : '';
 
   const parts = [
     `💪 ${label} · ${date}${durStr}`,
     '',
     exRows.join('\n'),
     '',
-    [volLine, levelUpLines].filter(Boolean).join('\n'),
+    [volLine, animalLine].filter(Boolean).join('\n'),
   ].filter((p, i, arr) => !(p === '' && arr[i - 1] === ''));
 
   return parts.join('\n').trim();

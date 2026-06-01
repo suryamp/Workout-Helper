@@ -2,7 +2,6 @@
 .warmup-slide-card{background:linear-gradient(135deg,#1a1a2e,#16213e,#1a1230);border:1px solid rgba(123,111,240,.4);border-radius:var(--rl);padding:16px;position:relative;overflow:hidden;}
 .warmup-slide-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(123,111,240,.2) 0%,transparent 70%);pointer-events:none;}
 .warmup-title{font-size:18px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.warmup-title::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 8px var(--accent2);}
 .warmup-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(123,111,240,.15);font-size:17px;}
 .warmup-row:last-child{border-bottom:none;}
 .warmup-row .wn{color:var(--text);}
@@ -143,12 +142,14 @@
 .saved{animation:saved-flash 1.2s ease-out;}
 
 
-.day-done{text-align:center;padding:40px 20px;}
+.day-done{text-align:center;padding:2px 20px;}
 .done-big{font-size:48px;margin-bottom:12px;}
 .done-msg{font-size:14px;color:var(--text2);line-height:1.6;}
-.done-volume{font-size:16px;font-weight:700;color:var(--accent);margin-top:12px;}
-.done-actions{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:20px;}
-.share-btn-done{font-size:13px;padding:10px 24px;}
+.done-volume{font-size:16px;font-weight:700;color:var(--accent);margin-top:12px;margin-bottom:18px;}
+.done-animal{display:block;width:100%;box-sizing:border-box;margin:12px 0 0;padding:14px 16px;background:linear-gradient(135deg,#1a1a2e,#16213e,#1a1230);border:1px solid rgba(123,111,240,.4);border-radius:var(--rl);font-size:14px;color:var(--text2);text-align:center;position:relative;overflow:hidden;}
+.done-animal::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(123,111,240,.2) 0%,transparent 70%);pointer-events:none;}
+.done-actions{display:flex;flex-direction:row;justify-content:center;gap:10px;margin-top:20px;}
+.share-btn-done{font-size:13px;padding:10px 24px;background:var(--accent);border-color:transparent;color:#0a0a0f;border-radius:10px;}
 .restart-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:12px 24px;cursor:pointer;}
 
 /* Level-up summary card on done screen */
@@ -336,6 +337,7 @@
 .detail-vol-up{font-weight:700;color:#6edb7a;}
 .detail-vol-down{font-weight:700;color:var(--ss);}
 .detail-vol-neutral{color:var(--text3);}
+.detail-vol-animal{font-size:12px;color:var(--text3);margin-top:6px;margin-bottom:6px;text-align:center;}
 
 /* Exercise blocks */
 .detail-ex-block{padding:12px 0;border-bottom:1px solid var(--border);}

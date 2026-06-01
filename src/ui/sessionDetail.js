@@ -5,6 +5,7 @@
 
 import { getSessionDetails } from '../db/index.js';
 import { DAY_LABELS }        from '../data/days.js';
+import { getVolumeAnimal }   from '../data/volumeAnimals.js';
 
 let _overlay = null;
 
@@ -94,6 +95,10 @@ function _renderVolume(currentVolume, prevVolume) {
     </div>`;
   }
 
+  const animal  = getVolumeAnimal(currentVolume);
+  const article = /^the /i.test(animal.name) ? '' : /^[AEIOUaeiou]/.test(animal.name) ? 'an ' : 'a ';
+  const animalLine = `<div class="detail-vol-animal">You lifted the weight of ${article}<strong>${animal.name}</strong> ${animal.emoji}</div>`;
+
   return `<div class="detail-section">
     <div class="detail-section-title">Volume</div>
     <div class="detail-vol-row">
@@ -101,6 +106,7 @@ function _renderVolume(currentVolume, prevVolume) {
       <span class="detail-vol-today">${Math.round(currentVolume).toLocaleString()} lbs</span>
     </div>
     ${prevLine}
+    ${animalLine}
   </div>`;
 }
 

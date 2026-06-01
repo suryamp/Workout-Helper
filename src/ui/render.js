@@ -12,6 +12,7 @@ import { initSetState, renderSetWidget, getState } from '../state/setWidget.js';
 import { completeSession }               from '../state/session.js';
 import { REST_DEFAULTS }                 from '../ui/timer.js';
 import { buildShareText }                from '../ui/share.js';
+import { getVolumeAnimal }               from '../data/volumeAnimals.js';
 
 // ── Done-screen messages (rotated by session count) ─────────────────────────
 const DONE_MESSAGES = [
@@ -102,7 +103,7 @@ async function exCardInner(key, uid) {
 
   const levelUpHTML = prog.levelUp ? `
     <div class="levelup-banner">
-      <span class="levelup-icon">⬆</span>
+      <span class="levelup-icon">🚀</span>
       <span class="levelup-text">New weight: <strong>${prog.suggestedWeight} lbs</strong></span>
       <span class="levelup-delta">+${prog.increment} lbs</span>
     </div>` : '';
@@ -198,6 +199,7 @@ export async function renderDay(day) {
 
   // ── Done ─────────────────────────────────
   if (idx >= total) {
+    html = '';
     await completeSession(day);
 
     // Only check progression for exercises where the user confirmed at least
@@ -220,9 +222,12 @@ export async function renderDay(day) {
     const thisSession   = allCompleted.find(s => s.day === day) ?? null;
     const sessionLogs   = thisSession ? await getLogsForSession(thisSession.startedAt) : [];
     const volume        = computeVolume(sessionLogs);
-    const volStr        = volume > 0
-      ? `<div class="done-volume">📦 ${Math.round(volume).toLocaleString()} lbs lifted</div>`
-      : '';
+    let volStr = '';
+    if (volume > 0) {
+      const animal = getVolumeAnimal(volume);
+      volStr = `<div class="done-volume">📦 ${Math.round(volume).toLocaleString()} lbs lifted</div>
+      <div class="done-animal">That's the weight of ${/^the /i.test(animal.name) ? '' : /^[AEIOUaeiou]/.test(animal.name) ? 'an ' : 'a '}<strong>${animal.name}</strong> ${animal.emoji}</div>`;
+    }
 
     const sharePayload = thisSession
       ? encodeURIComponent(JSON.stringify({
@@ -234,11 +239,11 @@ export async function renderDay(day) {
 
     let levelUpHTML = '';
     if (levelUps.length > 0) {
-      const title ='⬆ New weight unlocked';
+      const title ='New weight unlocked';
       const rows = levelUps.map(lu => `
         <div class="warmup-row">
           <span class="wn">${lu.name}</span>
-          <span class="ws">${lu.prevWeight} → ${lu.suggestedWeight} lbs</span>
+          <span class="ws">${lu.suggestedWeight} lbs</span>
         </div>`).join('');
       levelUpHTML = `<div class="warmup-slide-card levelup-summary">
         <div class="warmup-title">${title}</div>
@@ -256,13 +261,12 @@ export async function renderDay(day) {
 
     html += `<div class="day-done">
       <div class="done-big">🎉</div>
-      <div class="done-msg">${data.label} complete!<br>${DONE_MESSAGES[allCompleted.length % DONE_MESSAGES.length]}</div>
+      <div class="done-msg">${DONE_MESSAGES[allCompleted.length % DONE_MESSAGES.length]}</div>
       ${volStr}
       ${levelUpHTML}
       <div class="done-actions">
         ${detailsBtn}
         ${shareBtn}
-        <button class="restart-btn" onclick="openRestartModal('${day}')">Restart Workout</button>
       </div>
     </div>`;
     cnt.innerHTML = html;
