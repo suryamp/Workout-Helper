@@ -10,15 +10,15 @@
    The layer contract is: tokens → layout → components → animations.
    Keyframes belong in animations.css; component rules reference them. */
 @keyframes saved-flash {
-  0%   { background: rgba(200,240,67,.12); }
+  0%   { background: rgba(var(--accent-rgb),.12); }
   100% { background: var(--surface); }
 }
 
 /* Plays on pill-pending for the duration of the auto-lock debounce.
    The border brightens then settles, giving a visual "counting down" cue. */
 @keyframes pill-countdown {
-  0%   { border-color: rgba(200,240,67,.9); background: rgba(200,240,67,.18); }
-  100% { border-color: rgba(200,240,67,.6); background: rgba(200,240,67,.1);  }
+  0%   { border-color: rgba(var(--accent-rgb),.9); background: rgba(var(--accent-rgb),.18); }
+  100% { border-color: rgba(var(--accent-rgb),.6); background: rgba(var(--accent-rgb),.1);  }
 }
 
 /* Session detail bottom sheet slides up from below. */
@@ -26,3 +26,33 @@
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
 }
+
+
+/* ══════════════════════════════════════════
+   COLORBLIND — override hardcoded green (#6edb7a) used for "up" indicators
+══════════════════════════════════════════ */
+[data-colorblind] .detail-wt-up  { color: var(--accent); }
+[data-colorblind] .detail-vol-up { color: var(--accent); }
+
+
+/* ══════════════════════════════════════════
+   REDUCE MOTION — auto via OS preference and via manual toggle
+══════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .slides-track,
+  .toggle-thumb, .toggle-track,
+  .progress-bar-fill { transition: none; }
+  .detail-sheet, .menu-sheet,
+  .pill-pending, .saved, .share-toast { animation: none; }
+  .set-pill:active { transform: none; }
+}
+[data-reduce-motion] .slides-track,
+[data-reduce-motion] .toggle-thumb,
+[data-reduce-motion] .toggle-track,
+[data-reduce-motion] .progress-bar-fill { transition: none; }
+[data-reduce-motion] .detail-sheet,
+[data-reduce-motion] .menu-sheet,
+[data-reduce-motion] .pill-pending,
+[data-reduce-motion] .saved,
+[data-reduce-motion] .share-toast { animation: none; }
+[data-reduce-motion] .set-pill:active { transform: none; }

@@ -15,7 +15,7 @@ export function initMenu() {
       <div class="menu-items">
         <button class="menu-item-btn" onclick="menuHistory()">History</button>
         <button class="menu-item-btn menu-item-stub" onclick="menuTrends()">Trends</button>
-        <button class="menu-item-btn menu-item-stub" onclick="menuSettings()">Settings</button>
+        <button class="menu-item-btn" onclick="menuSettings()">Settings</button>
         <button class="menu-item-btn" onclick="menuDebug()">Debug</button>
         <button class="menu-item-btn" onclick="menuExport()">Export Data</button>
         <button class="menu-item-btn" onclick="menuAbout()">About</button>

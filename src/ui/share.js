@@ -6,6 +6,7 @@
 import { EXERCISES }  from '../data/exercises.js';
 import { DAY_LABELS } from '../data/days.js';
 import { getVolumeAnimal } from '../data/volumeAnimals.js';
+import { getUnit }    from '../utils/settings.js';
 
 /**
  * Emoji grade for a single set.
@@ -47,7 +48,7 @@ export function buildShareText(session, logs, levelUps = []) {
         ? log.exerciseName.slice(0, 22) + '…'
         : log.exerciseName;
       const wt     = parseFloat(log.sets[0]?.weight) || 0;
-      const wtStr  = wt > 0 ? ` (${wt} lbs)` : '';
+      const wtStr  = wt > 0 ? ` (${wt} ${getUnit()})` : '';
       return `${dots} ${name}${wtStr}`;
     });
 
@@ -57,7 +58,7 @@ export function buildShareText(session, logs, levelUps = []) {
     , 0)
   , 0);
 
-  const volLine = volume > 0 ? `📦 ${Math.round(volume).toLocaleString()} lbs total` : '';
+  const volLine = volume > 0 ? `📦 ${Math.round(volume).toLocaleString()} ${getUnit()} total` : '';
   const animalLine  = volume > 0 ? (() => {
     const a       = getVolumeAnimal(volume);
     const article = /^the /i.test(a.name) ? '' : /^[AEIOUaeiou]/.test(a.name) ? 'an ' : 'a ';

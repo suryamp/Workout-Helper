@@ -12,6 +12,8 @@
 //  That block is the only place globals are declared — keep it that way.
 // ══════════════════════════════════════════
 
+import { applyTheme, applyColorblind, applyReduceMotion } from './utils/settings.js';
+import { acquireWakeLock, releaseWakeLock }               from './utils/wakeLock.js';
 import { initDB, recoverIfNeeded }       from './db/index.js';
 import { initTelemetry, capture, Events, getLog, clearLog } from './telemetry.js';
 import { EXERCISES }                     from './data/exercises.js';
@@ -51,6 +53,20 @@ import { showPage, setActiveTab }              from './ui/nav.js';
 import { shareText, buildShareText }           from './ui/share.js';
 import { renderHome }                          from './ui/home.js';
 import { initMenu, openMenu, closeMenu }       from './ui/menu.js';
+import {
+  renderSettings,
+  settingsToggleTheme,
+  settingsToggleWakeLock,
+  settingsToggleColorblind,
+  settingsToggleReduceMotion,
+  settingsToggleUnits,
+  settingsFactoryReset,
+}                                              from './ui/settings.js';
+
+// Apply all saved display preferences before any rendering.
+applyTheme();
+applyColorblind();
+applyReduceMotion();
 
 // ── Save + Advance ──────────────────────
 
@@ -138,8 +154,7 @@ async function menuTrends() {
 
 async function menuSettings() {
   closeMenu();
-  const cnt = document.getElementById('cnt-settings');
-  if (cnt) cnt.innerHTML = `<div class="sec-label">Settings</div><div class="empty">Coming soon.</div>`;
+  renderSettings();
   await showPage('settings', null);
 }
 
@@ -261,7 +276,10 @@ function _showStorageError(err) {
   await reconcileStaleSessions();
 
   document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible') await reconcileStaleSessions();
+    if (document.visibilityState === 'visible') {
+      await reconcileStaleSessions();
+      acquireWakeLock(); // re-acquire after browser auto-releases on page hide
+    }
   });
 
   const nextDay = await getNextDay();
@@ -272,7 +290,13 @@ function _showStorageError(err) {
 
   await renderHome(nextDay);
   await showPage('home', null);
+  acquireWakeLock();
 })();
+
+async function _rerenderAllDays() {
+  const days = ['heavy-a', 'heavy-b', 'acc-a', 'acc-b'];
+  await Promise.all(days.map(day => renderDay(day)));
+}
 
 // ══════════════════════════════════════════
 //  window.* — globals required by onclick= in rendered HTML strings.
@@ -329,4 +353,12 @@ Object.assign(window, {
   menuExport,
   menuAbout,
   clearDebugLog,
+  // Settings
+  settingsToggleTheme,
+  settingsToggleWakeLock,
+  settingsToggleColorblind,
+  settingsToggleReduceMotion,
+  settingsToggleUnits,
+  settingsFactoryReset,
+  _rerenderAllDays,
 });

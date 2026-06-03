@@ -5,6 +5,8 @@
   --surface2:#1c1c27;
   --surface3:#242435;
   --accent:#c8f043;
+  --accent-rgb:200,240,67;
+  --accent-fg:#0a0a0f;
   --accent2:#7b6ff0;
   --ss:#f04370;
   --text:#f0f0f5;
@@ -12,8 +14,33 @@
   --text3:#5a5a70;
   --border:rgba(255,255,255,0.07);
   --border2:rgba(255,255,255,0.13);
+  --nav-bg:rgba(10,10,15,0.94);
   --r:12px;
   --rl:18px;
+}
+[data-theme="light"]{
+  --bg:#f4f4f7;
+  --surface:#ffffff;
+  --surface2:#eaeaee;
+  --surface3:#dedee6;
+  --accent:#5d8a00;
+  --accent-fg:#ffffff;
+  --text:#0f0f14;
+  --text2:#454560;
+  --text3:#7a7a90;
+  --border:rgba(0,0,0,0.07);
+  --border2:rgba(0,0,0,0.13);
+  --nav-bg:rgba(244,244,247,0.94);
+}
+[data-colorblind]{
+  --accent:#4da6ff;
+  --accent-rgb:77,166,255;
+  --ss:#ff8c42;
+}
+[data-theme="light"][data-colorblind]{
+  --accent:#0070cc;
+  --accent-rgb:0,112,204;
+  --ss:#d94f00;
 }
 body{font-family:'DM Mono','Fira Mono','Courier New',monospace;background:var(--bg);min-height:100vh;color:var(--text);}
 

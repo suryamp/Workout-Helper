@@ -7,6 +7,7 @@
 // ══════════════════════════════════════════
 
 import { applyWeightFromModal } from '../state/setWidget.js';
+import { getUnit }              from '../utils/settings.js';
 
 // ── Weight modal ────────────────────────
 
@@ -45,6 +46,7 @@ export function openWeightModal(uid, state) {
   const input = document.getElementById('weight-modal-input');
   const title = document.getElementById('weight-modal-title');
   title.textContent = state?.exName || 'Weight';
+  modal.querySelector('.wmodal-sub').textContent = getUnit();
   input.value       = state?.weight || '';
   modal.dataset.uid = uid;
   modal.classList.add('open');

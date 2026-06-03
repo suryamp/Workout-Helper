@@ -6,6 +6,7 @@
 
 import { getSmartTimer, startTimer } from '../ui/timer.js';
 import { openWeightModal }           from '../ui/modals.js';
+import { getUnit }                   from '../utils/settings.js';
 
 // ── State map ───────────────────────────
 // Keyed by uid (`${day}-${stepIdx}-${partIdx}`).
@@ -117,7 +118,7 @@ export function renderSetWidget(uid) {
   const container = document.getElementById('sw-' + uid);
   if (!container) return;
 
-  const weightLbl   = s.weight ? `${s.weight} lbs` : 'Set Wgt';
+  const weightLbl   = s.weight ? `${s.weight} ${getUnit()}` : 'Set Wgt';
   const weightEmpty = !s.weight;
 
   const pillsHTML = s.pills.map((pill, i) => {

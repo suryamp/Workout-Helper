@@ -6,6 +6,7 @@
 import { getSessionDetails } from '../db/index.js';
 import { DAY_LABELS }        from '../data/days.js';
 import { getVolumeAnimal }   from '../data/volumeAnimals.js';
+import { getUnit }           from '../utils/settings.js';
 
 let _overlay = null;
 
@@ -79,7 +80,7 @@ function _renderSheet({ session, exercises, currentVolume, prevVolume }) {
   const durStr = mins != null ? ` · ${mins} min` : '';
 
   const volChip = currentVolume > 0
-    ? `<span class="detail-header-vol">${Math.round(currentVolume).toLocaleString()} lbs</span>`
+    ? `<span class="detail-header-vol">${Math.round(currentVolume).toLocaleString()} ${getUnit()}</span>`
     : '';
 
   return `
@@ -118,7 +119,7 @@ function _renderVolume(currentVolume, prevVolume) {
     const pctStr = pct != null ? ` (${sign}${pct}% ${arrow})` : '';
     prevLine = `<div class="detail-vol-row">
       <span class="detail-vol-label">Last time</span>
-      <span class="${cls}">${Math.round(prevVolume).toLocaleString()} lbs${pctStr}</span>
+      <span class="${cls}">${Math.round(prevVolume).toLocaleString()} ${getUnit()}${pctStr}</span>
     </div>`;
   }
 
@@ -130,7 +131,7 @@ function _renderVolume(currentVolume, prevVolume) {
     <div class="detail-section-title">Volume</div>
     <div class="detail-vol-row">
       <span class="detail-vol-label">Today</span>
-      <span class="detail-vol-today">${Math.round(currentVolume).toLocaleString()} lbs</span>
+      <span class="detail-vol-today">${Math.round(currentVolume).toLocaleString()} ${getUnit()}</span>
     </div>
     ${prevLine}
     ${animalLine}
@@ -143,13 +144,13 @@ function _renderExBlock({ exerciseName, sets, prevBaselineWeight, levelUp, incre
     bannerHtml = `<div class="levelup-banner">
       <span class="levelup-icon">🚀</span>
       <span class="levelup-text">New weight for next time:</span>
-      <span class="levelup-delta">${prevWeight + increment} lbs</span>
+      <span class="levelup-delta">${prevWeight + increment} ${getUnit()}</span>
     </div>`;
   }
 
   const metaParts = [];
   if (prevBaselineWeight != null && prevBaselineWeight > 0)
-    metaParts.push(`<span class="detail-prev-ref">Last time: ${prevBaselineWeight} lbs</span>`);
+    metaParts.push(`<span class="detail-prev-ref">Last time: ${prevBaselineWeight} ${getUnit()}</span>`);
   else if (prevBaselineWeight === null)
     metaParts.push(`<span class="detail-prev-ref">First time</span>`);
   if (streak > 0 && streakNeeded != null && streakNeeded > 1) {
@@ -166,7 +167,7 @@ function _renderExBlock({ exerciseName, sets, prevBaselineWeight, levelUp, incre
     let wtSuffix = '';
     if (s.weightDir ===  1) { wtClass = 'detail-wt-up';   wtSuffix = ' ↑'; }
     if (s.weightDir === -1) { wtClass = 'detail-wt-down'; wtSuffix = ' ↓'; }
-    const wtStr    = s.weight > 0 ? `${s.weight} lbs` : 'BW';
+    const wtStr    = s.weight > 0 ? `${s.weight} ${getUnit()}` : 'BW';
     const repsClass = s.repsHit ? '' : 'detail-reps-miss';
     const repsStr  = `${s.reps} reps`;
 

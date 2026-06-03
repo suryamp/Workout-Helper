@@ -13,6 +13,7 @@ import { completeSession }               from '../state/session.js';
 import { REST_DEFAULTS }                 from '../ui/timer.js';
 import { buildShareText }                from '../ui/share.js';
 import { getVolumeAnimal }               from '../data/volumeAnimals.js';
+import { getUnit }                       from '../utils/settings.js';
 
 // ── Done-screen messages (rotated by session count) ─────────────────────────
 const DONE_MESSAGES = [
@@ -104,8 +105,8 @@ async function exCardInner(key, uid) {
   const levelUpHTML = prog.levelUp ? `
     <div class="levelup-banner">
       <span class="levelup-icon">🚀</span>
-      <span class="levelup-text">New weight: <strong>${prog.suggestedWeight} lbs</strong></span>
-      <span class="levelup-delta">+${prog.increment} lbs</span>
+      <span class="levelup-text">New weight: <strong>${prog.suggestedWeight} ${getUnit()}</strong></span>
+      <span class="levelup-delta">+${prog.increment} ${getUnit()}</span>
     </div>` : '';
 
   initSetState(uid, numSets, prog.suggestedWeight, targetReps, key, ex.displayName);
@@ -225,7 +226,7 @@ export async function renderDay(day) {
     let volStr = '';
     if (volume > 0) {
       const animal = getVolumeAnimal(volume);
-      volStr = `<div class="done-volume">📦 ${Math.round(volume).toLocaleString()} lbs lifted</div>
+      volStr = `<div class="done-volume">📦 ${Math.round(volume).toLocaleString()} ${getUnit()} lifted</div>
       <div class="done-animal">That's the weight of ${/^the /i.test(animal.name) ? '' : /^[AEIOUaeiou]/.test(animal.name) ? 'an ' : 'a '}<strong>${animal.name}</strong> ${animal.emoji}</div>`;
     }
 
@@ -243,7 +244,7 @@ export async function renderDay(day) {
       const rows = levelUps.map(lu => `
         <div class="warmup-row">
           <span class="wn">${lu.name}</span>
-          <span class="ws">${lu.suggestedWeight} lbs</span>
+          <span class="ws">${lu.suggestedWeight} ${getUnit()}</span>
         </div>`).join('');
       levelUpHTML = `<div class="warmup-slide-card levelup-summary">
         <div class="warmup-title">${title}</div>

@@ -5,6 +5,7 @@
 
 import { EXERCISES }                              from '../data/exercises.js';
 import { STORE_LOGS, STORE_COMPLETED, initDB, _idbWrite, _promisify } from './connection.js';
+import { getUnit }                                from '../utils/settings.js';
 
 // ─── getProgressionData ──────────────────────────────────────────────────────
 
@@ -34,7 +35,7 @@ export async function getProgressionData(exerciseKey) {
     // No real history yet — seed the suggested weight from the exercise definition
     // so the weight chip is pre-filled on a fresh install.
     const w = ex.defaultWeight;
-    return { suggestedWeight: w || null, badge: w ? `${w} lbs` : null, levelUp: false, streak: 0, streakNeeded: cfg.successesNeeded };
+    return { suggestedWeight: w || null, badge: w ? `${w} ${getUnit()}` : null, levelUp: false, streak: 0, streakNeeded: cfg.successesNeeded };
   }
 
   return _progressionFromEntries(ex, entries);
@@ -58,7 +59,7 @@ function _progressionFromEntries(ex, entries) {
     const newW = lastWeight + cfg.increment;
     return {
       suggestedWeight: newW,
-      badge:      `${newW} lbs (${cfg.increment}↑)`,
+      badge:      `${newW} ${getUnit()} (${cfg.increment}↑)`,
       levelUp:    true,
       prevWeight: lastWeight,
       increment:  cfg.increment,
@@ -66,9 +67,9 @@ function _progressionFromEntries(ex, entries) {
       streakNeeded: needed,
     };
   } else if (streak > 0 && needed > 1) {
-    return { suggestedWeight: lastWeight, badge: `${lastWeight} lbs · Streak ${streak}/${needed} 🚀`, levelUp: false, streak, streakNeeded: needed };
+    return { suggestedWeight: lastWeight, badge: `${lastWeight} ${getUnit()} · Streak ${streak}/${needed} 🚀`, levelUp: false, streak, streakNeeded: needed };
   } else {
-    return { suggestedWeight: lastWeight, badge: lastWeight > 0 ? `${lastWeight} lbs` : null, levelUp: false, streak, streakNeeded: needed };
+    return { suggestedWeight: lastWeight, badge: lastWeight > 0 ? `${lastWeight} ${getUnit()}` : null, levelUp: false, streak, streakNeeded: needed };
   }
 }
 

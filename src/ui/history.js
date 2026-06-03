@@ -7,6 +7,7 @@ import { DAY_LABELS }                    from '../data/days.js';
 import { EXERCISES }                     from '../data/exercises.js';
 import { getSessionHistory, deleteSession as _deleteSession } from '../db/index.js';
 import { buildShareText, shareText }     from './share.js';
+import { getUnit }                       from '../utils/settings.js';
 
 // ── Rendering ───────────────────────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ function _sessionCard(session, logs, volume) {
     : null;
   const durStr  = mins != null ? ` · ${mins} min` : '';
   const volStr  = volume > 0
-    ? `<span class="session-volume">${Math.round(volume).toLocaleString()} lbs</span>`
+    ? `<span class="session-volume">${Math.round(volume).toLocaleString()} ${getUnit()}</span>`
     : '';
 
   const exRows = logs
@@ -43,7 +44,7 @@ function _sessionCard(session, logs, volume) {
     .map(log => {
       const target  = EXERCISES[log.exerciseKey]?.progression?.targetReps ?? 10;
       const wt      = parseFloat(log.sets[0]?.weight) || 0;
-      const wtStr   = wt > 0 ? `${wt} lbs` : 'BW';
+      const wtStr   = wt > 0 ? `${wt} ${getUnit()}` : 'BW';
       const reps    = log.sets.map(s => parseInt(s.reps) || 0);
       // Color-coded rep dots
       const dots    = reps.map(r =>
