@@ -4,7 +4,7 @@
 // ══════════════════════════════════════════
 
 import { EXERCISES }                              from '../data/exercises.js';
-import { STORE_LOGS, STORE_COMPLETED, _requireDB, _idbWrite, _promisify } from './connection.js';
+import { STORE_LOGS, STORE_COMPLETED, initDB, _idbWrite, _promisify } from './connection.js';
 
 // ─── getProgressionData ──────────────────────────────────────────────────────
 
@@ -25,7 +25,7 @@ export async function getProgressionData(exerciseKey) {
   const ex = EXERCISES[exerciseKey];
   if (!ex?.progression) return { suggestedWeight: null, badge: null, levelUp: false, streak: 0, streakNeeded: null };
 
-  const db  = _requireDB();
+  const db  = await initDB();
   const cfg = ex.progression;
   const FETCH_LIMIT = Math.max(10, cfg.successesNeeded + 5);
   const entries     = await _getRecentLogs(db, exerciseKey, FETCH_LIMIT);
@@ -85,7 +85,7 @@ function _progressionFromEntries(ex, entries) {
  * @returns {Promise<object[]>}  newest-first
  */
 export async function getHistory({ includeSeeded = false, limit = 40, exerciseKey } = {}) {
-  const db    = _requireDB();
+  const db    = await initDB();
   const txn   = db.transaction(STORE_LOGS, 'readonly');
   const store = txn.objectStore(STORE_LOGS);
 
@@ -123,7 +123,7 @@ export async function getHistory({ includeSeeded = false, limit = 40, exerciseKe
  * @param {number} id — the autoIncrement primary key stored in entry.id
  */
 export async function deleteHistoryEntry(id) {
-  const db = _requireDB();
+  const db = await initDB();
   await _idbWrite(db, STORE_LOGS, store => store.delete(id));
 }
 
@@ -138,7 +138,7 @@ export async function deleteHistoryEntry(id) {
  * @returns {Promise<{ session: object, logs: object[], volume: number }[]>}
  */
 export async function getSessionHistory({ limit = 20 } = {}) {
-  const db         = _requireDB();
+  const db         = await initDB();
   const txn        = db.transaction([STORE_LOGS, STORE_COMPLETED], 'readonly');
   const logIndex   = txn.objectStore(STORE_LOGS).index('by_session');
   const sessIndex  = txn.objectStore(STORE_COMPLETED).index('by_completedAt');
@@ -167,7 +167,7 @@ export async function getSessionHistory({ limit = 20 } = {}) {
  * @returns {Promise<object[]>}
  */
 export async function getLogsForSession(sessionId) {
-  const db = _requireDB();
+  const db = await initDB();
   return _promisify(
     db.transaction(STORE_LOGS, 'readonly')
       .objectStore(STORE_LOGS)
@@ -181,7 +181,7 @@ export async function getLogsForSession(sessionId) {
  * @param {number} startedAt — session primary key / sessionId
  */
 export async function deleteSession(startedAt) {
-  const db = _requireDB();
+  const db = await initDB();
   await new Promise((resolve, reject) => {
     const txn        = db.transaction([STORE_LOGS, STORE_COMPLETED], 'readwrite');
     const logStore   = txn.objectStore(STORE_LOGS);
@@ -233,7 +233,7 @@ export function computeVolume(logs) {
  * }|null>}
  */
 export async function getSessionDetails(startedAt) {
-  const db = _requireDB();
+  const db = await initDB();
 
   const allSessions = await _promisify(
     db.transaction(STORE_COMPLETED, 'readonly')

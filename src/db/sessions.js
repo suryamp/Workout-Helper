@@ -15,7 +15,7 @@ import {
   STORE_LOGS,
   STORE_ACTIVE,
   STORE_COMPLETED,
-  _requireDB,
+  initDB,
   _idbWrite,
   _promisify,
 } from './connection.js';
@@ -87,7 +87,7 @@ export function abandonSession(day) {
  * @returns {Promise<void>}
  */
 export async function completeSession(day, session) {
-  const db      = _requireDB();
+  const db      = await initDB();
   const toFlush = Object.values(_pending).filter(e => e.day === day);
 
   await new Promise((resolve, reject) => {
@@ -182,7 +182,7 @@ export async function completeSession(day, session) {
  * @returns {Promise<Record<string, object>>}
  */
 export async function getActiveSessions() {
-  const db    = _requireDB();
+  const db    = await initDB();
   const txn   = db.transaction(STORE_ACTIVE, 'readonly');
   const store = txn.objectStore(STORE_ACTIVE);
   const all   = await _promisify(store.getAll());
@@ -194,7 +194,7 @@ export async function getActiveSessions() {
  * @param {{ logicalDay: string, day: string, startedAt: number, completedAt: null }} session
  */
 export async function putActiveSession(session) {
-  const db = _requireDB();
+  const db = await initDB();
   await _idbWrite(db, STORE_ACTIVE, store => store.put(session));
 }
 
@@ -203,7 +203,7 @@ export async function putActiveSession(session) {
  * @param {string} logicalDay
  */
 export async function deleteActiveSession(logicalDay) {
-  const db = _requireDB();
+  const db = await initDB();
   await _idbWrite(db, STORE_ACTIVE, store => store.delete(logicalDay));
 }
 
@@ -214,7 +214,7 @@ export async function deleteActiveSession(logicalDay) {
  * @returns {Promise<object[]>}
  */
 export async function getCompletedSessions() {
-  const db    = _requireDB();
+  const db    = await initDB();
   const txn   = db.transaction(STORE_COMPLETED, 'readonly');
   const index = txn.objectStore(STORE_COMPLETED).index('by_completedAt');
   const all   = await _promisify(index.getAll());
@@ -226,7 +226,7 @@ export async function getCompletedSessions() {
  * @param {object} session
  */
 export async function putCompletedSession(session) {
-  const db = _requireDB();
+  const db = await initDB();
   // Ensure logicalDay is populated (reconcileStaleSessions may omit it).
   const logicalDay = session.logicalDay ?? _getLogicalDay(session.startedAt);
   await _idbWrite(db, STORE_COMPLETED, store => store.put({ logicalDay, ...session }));

@@ -116,6 +116,13 @@ export function initDB() {
         console.warn('[WorkoutDB] version change — connection closed');
       };
 
+      // Safari/iOS can close the connection while the page is backgrounded.
+      // Reset _db so the next initDB() call reopens a fresh connection.
+      _db.onclose = () => {
+        _db = null;
+        console.warn('[WorkoutDB] connection closed unexpectedly');
+      };
+
       resolve(_db);
     };
 
