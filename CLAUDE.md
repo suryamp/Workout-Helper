@@ -35,7 +35,7 @@ Tests live in `tests/` mirroring the `src/` structure. Always run `npm run test:
 
 ## Architecture in one paragraph
 
-`src/main.js` is the sole entry point. It boots the app, wires all globals, and is the only file that touches `window.*`. Rendering is done by `src/ui/render.js`, which writes `innerHTML` strings. In-memory set state lives in `src/state/setWidget.js`. Session lifecycle (start/complete/abandon/reconcile) lives in `src/state/session.js`. Persistence is split across three sub-modules under `src/db/`: `connection.js` (IDB singleton, schema, low-level helpers), `sessions.js` (staging buffer, session CRUD, atomic flush + progression snapshot), and `logs.js` (progression queries, history, session details). `src/db/index.js` is a barrel that re-exports the full public API — all callers outside `db/` import from there. Pure data — no logic — lives in `src/data/exercises.js`, `src/data/days.js`, and `src/data/volumeAnimals.js`. Time math (logical day boundary) lives in `src/utils/time.js` and is imported wherever needed — never duplicated. Share-text generation lives in `src/ui/share.js`; the session detail bottom sheet lives in `src/ui/sessionDetail.js`.
+`src/main.js` is the sole entry point. It boots the app, wires all globals, and is the only file that touches `window.*`. Rendering is done by `src/ui/render.js`, which writes `innerHTML` strings. In-memory set state lives in `src/state/setWidget.js`. Session lifecycle (start/complete/abandon/reconcile) lives in `src/state/session.js`. Persistence is split across three sub-modules under `src/db/`: `connection.js` (IDB singleton, schema, low-level helpers), `sessions.js` (staging buffer, session CRUD, atomic flush + progression snapshot), and `logs.js` (progression queries, history, session details). `src/db/index.js` is a barrel that re-exports the full public API — all callers outside `db/` import from there. Pure data — no logic — lives in `src/data/exercises.js`, `src/data/days.js`, and `src/data/volumeAnimals.js`. Time math (logical day boundary) lives in `src/utils/time.js` and is imported wherever needed — never duplicated. User preferences (theme, units, colorblind, reduce motion, wake lock) are stored in `localStorage` via `src/utils/settings.js`, which also owns the `applyTheme`, `applyColorblind`, and `applyReduceMotion` functions called at boot. Screen wake lock management lives in `src/utils/wakeLock.js`. The Settings page UI lives in `src/ui/settings.js`. Share-text generation lives in `src/ui/share.js`; the session detail bottom sheet lives in `src/ui/sessionDetail.js`.
 
 ---
 
@@ -49,6 +49,8 @@ Inline `onclick="fnName(...)"` attributes in dynamically built HTML strings requ
 
 ### 3. CSS layer contract: tokens → layout → components → animations
 Each CSS file may only reference variables defined in a previous layer. `animations.css` owns **all** `@keyframes`. `components.css` references them by name but never defines them. Do not put `@keyframes` in `components.css`.
+
+`tokens.css` defines design tokens in `:root` and overrides them in `[data-theme="light"]`, `[data-colorblind]`, and `[data-theme="light"][data-colorblind]` attribute selectors. `animations.css` owns the `[data-reduce-motion]` motion-override rules and `@media (prefers-reduced-motion)` in addition to keyframes, since both are about suppressing motion. The `--accent-rgb` variable (e.g. `200,240,67`) exists so `rgba(var(--accent-rgb), 0.x)` tint values in components and keyframes adapt automatically when the colorblind palette swaps `--accent`.
 
 ### 4. Data files are zero-dependency
 `src/data/exercises.js` and `src/data/days.js` import nothing. Keep them that way — they must remain unit-testable and swappable without touching any other module.
@@ -77,6 +79,8 @@ Each CSS file may only reference variables defined in a previous layer. `animati
 | `src/db/sessions.js` | `_pending` buffer, `stageSetLog`, `abandonSession`, `completeSession` (atomic flush + progression snapshot), active/completed session CRUD |
 | `src/db/logs.js` | `getProgressionData`, `getHistory`, `getSessionDetails`, `deleteHistoryEntry`, `computeVolume`, streak computation |
 | `src/utils/time.js` | `getLogicalDay`, `endOfLogicalDay` — pure functions, no imports |
+| `src/utils/settings.js` | `getSetting`, `setSetting`, `getUnit`, `applyTheme`, `applyColorblind`, `applyReduceMotion` — localStorage-backed preferences, no imports |
+| `src/utils/wakeLock.js` | `acquireWakeLock`, `releaseWakeLock` — Screen Wake Lock API wrapper |
 | `src/state/session.js` | Session start/complete/abandon/reconcile/next-day rotation. No DOM access. |
 | `src/state/setWidget.js` | `_state` map, `initSetState`, `tapPill`, `_lockPill` (debounce callback), `clearDayState`, `renderSetWidget` |
 | `src/ui/render.js` | `renderDay`, `buildSlide`, `exCardInner`, `warmupSlide`, `timerHTML`, `minsRemaining` |
@@ -85,6 +89,7 @@ Each CSS file may only reference variables defined in a previous layer. `animati
 | `src/ui/sessionDetail.js` | `openSessionDetail`, `closeSessionDetail` — bottom sheet with per-set analytics, swipe-to-dismiss |
 | `src/ui/modals.js` | Weight modal, custom timer modal — DOM only, no business logic |
 | `src/ui/history.js` | `renderHistory`, `deleteEntry` |
+| `src/ui/settings.js` | `renderSettings`, toggle handlers for theme/units/colorblind/wake lock/reduce motion/factory reset |
 | `src/ui/nav.js` | `showPage`, `setActiveTab` |
 
 ---

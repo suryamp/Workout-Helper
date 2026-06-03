@@ -85,6 +85,7 @@ index.html
 | `src/data/days.js` | Imports nothing |
 | `src/data/volumeAnimals.js` | Imports nothing |
 | `src/utils/time.js` | Imports nothing |
+| `src/utils/settings.js` | Imports nothing (uses `localStorage` global, not a module import) |
 
 **Fan-in hotspots** (imported by many — most likely to affect multiple modules on change):
 
@@ -93,6 +94,7 @@ index.html
 | `src/data/exercises.js` | `db/`, `ui/render.js`, `ui/timer.js`, `main.js` |
 | `src/db/index.js` | `state/session.js`, `ui/render.js`, `ui/history.js`, `main.js` |
 | `src/state/setWidget.js` | `state/session.js`, `ui/render.js`, `ui/modals.js`, `main.js` |
+| `src/utils/settings.js` | `db/logs.js`, `state/setWidget.js`, `ui/render.js`, `ui/modals.js`, `ui/history.js`, `ui/share.js`, `ui/sessionDetail.js`, `ui/settings.js`, `utils/wakeLock.js`, `main.js` |
 
 ---
 
@@ -244,6 +246,15 @@ Progression is computed **on demand** from historical set-logs when rendering ex
 │   activeSessions   — one record per in-progress day         │
 │   completedSessions — append-only; capped at 365            │
 │   setLogs          — one record per exercise per session     │
+├─────────────────────────────────────────────────────────────┤
+│ PERSISTENT (localStorage)                                    │
+│   wh_theme         — 'dark' | 'light'  (default: 'dark')    │
+│   wh_units         — 'lbs'  | 'kg'     (default: 'lbs')     │
+│   wh_colorblind    — 'on'   | 'off'    (default: 'off')     │
+│   wh_reduce_motion — 'on'   | 'off'    (default: 'off')     │
+│   wh_wake_lock     — 'on'   | 'off'    (default: 'on')      │
+│   All accessed via getSetting/setSetting in utils/settings.js│
+│   Applied to <html> dataset attrs at boot before first render│
 ├─────────────────────────────────────────────────────────────┤
 │ EPHEMERAL (module-level variables; lost on page close)       │
 │   _state (setWidget.js)   — pill state per uid              │
@@ -444,7 +455,7 @@ The reps-minus-one choice is deliberate: it bootstraps `suggestedWeight` to `def
 
 ### 7.4 Connection Lifecycle
 
-`_db` is a module-level singleton. `initDB()` is idempotent — subsequent calls return the cached connection. The `onversionchange` handler closes and nulls `_db` when another tab opens a newer schema version, preventing stale-connection errors.
+`_db` is a module-level singleton. `initDB()` is idempotent — subsequent calls return the cached connection. Two handlers protect against stale connections: `onversionchange` fires when another tab opens a newer schema version (closes and nulls `_db`); `onclose` fires when the browser silently drops the connection (e.g. iOS Safari suspending a backgrounded PWA tab) and also nulls `_db`. All db functions call `await initDB()` rather than `_requireDB()` so any unexpected close triggers a clean reconnect on the next operation.
 
 ---
 
@@ -494,24 +505,33 @@ else:
 Four files, strict layer contract. Each layer may reference variables and classes defined in earlier layers only.
 
 ```
-tokens.css      — :root { --bg, --surface*, --accent*, --text*, --border*, --r, --rl }
-                  Source of all design tokens. No selectors beyond :root and *.
-                  Monospace font family is declared here on body.
+tokens.css      — Design tokens in :root plus theme/colorblind variant overrides:
+                    :root                         — dark mode defaults
+                    [data-theme="light"]          — light mode overrides
+                    [data-colorblind]             — blue/orange palette
+                    [data-theme="light"][data-colorblind] — combined
+                  Key variables: --bg, --surface*, --accent, --accent-rgb,
+                  --accent-fg, --accent2, --ss, --text*, --border*, --nav-bg, --r, --rl
+                  --accent-rgb holds the RGB triple for --accent (e.g. 200,240,67)
+                  so rgba(var(--accent-rgb), 0.x) tints adapt without selector duplication.
 
 layout.css      — nav, pages, containers, section labels
-                  References: var(--bg), var(--border), var(--accent), var(--text3)
+                  References: var(--nav-bg), var(--border), var(--accent), var(--text3)
                   No animation classes.
 
-components.css  — cards, pills, buttons, modals, timer, history, set widget, badges
+components.css  — cards, pills, buttons, modals, timer, history, set widget, badges,
+                  light-theme gradient overrides for hardcoded dark cards
                   References: all tokens, layout utility classes
                   References @keyframes by NAME ONLY — never defines them.
 
-animations.css  — ALL @keyframes definitions
+animations.css  — ALL @keyframes definitions; colorblind hardcoded-green overrides;
+                  reduce-motion rules (@media prefers-reduced-motion and [data-reduce-motion])
                   Only file permitted to define @keyframes.
-                  components.css uses animation-name to reference them.
+                  Also owns motion-suppression overrides so all animation concerns
+                  are co-located in one swappable file.
 ```
 
-Violating the `@keyframes` rule means `components.css` becomes a motion-definition source, breaking the ability to swap all animations by swapping a single file (e.g., for reduced-motion builds).
+Violating the `@keyframes` rule means `components.css` becomes a motion-definition source, breaking the ability to swap all animations by swapping a single file. The `[data-reduce-motion]` overrides live in `animations.css` for the same reason — they are the "off switch" for what `animations.css` turns on.
 
 ---
 
@@ -680,6 +700,8 @@ if (event.oldVersion < 3) {
 | `src/db/sessions.js` | `_pending` accumulator, `stageSetLog`, `abandonSession`, `completeSession` (atomic flush + progression snapshot), active/completed session CRUD |
 | `src/db/logs.js` | `getProgressionData`, `getHistory`, `getSessionDetails`, `deleteHistoryEntry`, `computeVolume`, `_getRecentLogs`, streak computation |
 | `src/utils/time.js` | `getLogicalDay`, `endOfLogicalDay` — pure functions, zero imports |
+| `src/utils/settings.js` | `getSetting`, `setSetting`, `getUnit`, `applyTheme`, `applyColorblind`, `applyReduceMotion` — localStorage preferences, zero imports |
+| `src/utils/wakeLock.js` | `acquireWakeLock`, `releaseWakeLock` — Screen Wake Lock API wrapper |
 | `src/state/session.js` | Session start / complete / abandon / reconcile / next-day rotation. No DOM access. |
 | `src/state/setWidget.js` | `_state` map, `initSetState`, `tapPill`, `_lockPill` (debounce callback), `clearDayState`, `renderSetWidget` |
 | `src/ui/render.js` | `renderDay`, `buildSlide`, `exCardInner`, `warmupSlide`, `timerHTML`, `minsRemaining` |
@@ -688,4 +710,5 @@ if (event.oldVersion < 3) {
 | `src/ui/sessionDetail.js` | `openSessionDetail`, `closeSessionDetail` — bottom sheet with per-set analytics, swipe-to-dismiss |
 | `src/ui/modals.js` | Weight modal, custom timer modal — DOM only, no business logic |
 | `src/ui/history.js` | `renderHistory`, `deleteEntry` |
+| `src/ui/settings.js` | `renderSettings`, `settingsToggle*` handlers — Settings page UI, owns all settings toggle interactions |
 | `src/ui/nav.js` | `showPage`, `setActiveTab` |
