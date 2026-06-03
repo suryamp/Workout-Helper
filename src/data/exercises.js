@@ -53,7 +53,7 @@ export const EXERCISES = {
   single_arm_db_row: {
     displayName:  'Single Arm DB Row',
     sets: 3, reps: 8,
-    video: 'FWJR5Ve8bnQ', notes: 'Fat grips optional',
+    video: 'gfUg6qWohTk', notes: 'Fat grips optional',
     rest: { easy: 60, hard: 90, failed: 180 },
     progression: { increment: 5, successesNeeded: 2, targetReps: 8 },
     estMinutes: 8, defaultWeight: 35,
@@ -61,7 +61,7 @@ export const EXERCISES = {
   split_squats: {
     displayName:  'Split Squats',
     sets: 3, reps: 8,
-    video: 'placeholder', notes: '',
+    video: 'hiLF_pF3EJM', notes: '',
     rest: { easy: 60, hard: 90, failed: 180 },
     progression: { increment: 5, successesNeeded: 2, targetReps: 8 },
     estMinutes: 8, defaultWeight: 25,
@@ -188,7 +188,7 @@ export const EXERCISES = {
   cable_y_raises: {
     displayName:  'Cable Y-Raises',
     sets: 3, reps: 12,
-    video: 'placeholder', notes: '',
+    video: 'R_n-b6XAUSU', notes: '',
     progression: { increment: 2.5, successesNeeded: 3, targetReps: 12 },
     estMinutes: 5, defaultWeight: 10,
   },
