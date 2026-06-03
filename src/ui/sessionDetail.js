@@ -21,21 +21,31 @@ function _getOverlay() {
   });
 
   const sheet = _overlay.querySelector('#session-detail-sheet');
-  let _startY = 0, _tracking = false;
+  // null = direction not yet decided, true = dismissing, false = scrolling
+  let _startY = 0, _tracking = null;
   sheet.addEventListener('touchstart', e => {
     const scroll = sheet.querySelector('.detail-scroll');
-    _tracking = !scroll || scroll.scrollTop === 0;
+    _tracking = scroll && scroll.scrollTop > 0 ? false : null;
     _startY = e.touches[0].clientY;
-    if (_tracking) sheet.style.transition = 'none';
   }, { passive: true });
   sheet.addEventListener('touchmove', e => {
-    if (!_tracking) return;
-    const dy = Math.max(0, e.touches[0].clientY - _startY);
-    sheet.style.transform = `translateY(${dy}px)`;
+    if (_tracking === false) return;
+    const dy = e.touches[0].clientY - _startY;
+    if (_tracking === null) {
+      if (Math.abs(dy) < 4) return; // wait for a clear direction
+      if (dy > 0) {
+        _tracking = true;
+        sheet.style.transition = 'none';
+      } else {
+        _tracking = false; // upward — let native scroll handle it
+      }
+      return;
+    }
+    sheet.style.transform = `translateY(${Math.max(0, dy)}px)`;
   }, { passive: true });
   sheet.addEventListener('touchend', e => {
-    if (!_tracking) return;
-    _tracking = false;
+    if (_tracking !== true) { _tracking = null; return; }
+    _tracking = null;
     sheet.style.transition = '';
     const dy = e.changedTouches[0].clientY - _startY;
     if (dy > 80) {
