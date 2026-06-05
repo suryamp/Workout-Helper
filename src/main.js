@@ -47,7 +47,13 @@ import {
   closeRestartModal,
 }                                        from './ui/modals.js';
 import { tapPill }                              from './state/setWidget.js';
-import { deleteSession, shareSession }         from './ui/history.js';
+import {
+  deleteSession, shareSession,
+  openHistoryFilter, closeHistoryFilter,
+  toggleHistoryDayFilter, setHistoryDateRange,
+  setHistoryCustomFrom, setHistoryCustomTo,
+  clearHistoryFilter, historyLoadMore,
+}                                              from './ui/history.js';
 import { openSessionDetail, closeSessionDetail } from './ui/sessionDetail.js';
 import { showPage, setActiveTab }              from './ui/nav.js';
 import { shareText, buildShareText }           from './ui/share.js';
@@ -415,6 +421,14 @@ Object.assign(window, {
   // History + share
   deleteSession,
   shareSession,
+  openHistoryFilter,
+  closeHistoryFilter,
+  toggleHistoryDayFilter,
+  setHistoryDateRange,
+  setHistoryCustomFrom,
+  setHistoryCustomTo,
+  clearHistoryFilter,
+  historyLoadMore,
   openSessionDetail,
   closeSessionDetail,
   shareDoneScreen: async (encodedPayload) => {

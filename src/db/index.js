@@ -23,8 +23,6 @@ export {
 
 export {
   getProgressionData,
-  getHistory,
-  deleteHistoryEntry,
   getSessionHistory,
   getLogsForSession,
   getSessionDetails,

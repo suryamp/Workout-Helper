@@ -118,16 +118,6 @@ export async function getHistory({ includeSeeded = false, limit = 40, exerciseKe
   return results;
 }
 
-/**
- * Delete a single set-log entry by its IDB primary key.
- *
- * @param {number} id — the autoIncrement primary key stored in entry.id
- */
-export async function deleteHistoryEntry(id) {
-  const db = await initDB();
-  await _idbWrite(db, STORE_LOGS, store => store.delete(id));
-}
-
 // ─── Session history ─────────────────────────────────────────────────────────
 
 /**
@@ -141,7 +131,6 @@ export async function deleteHistoryEntry(id) {
 export async function getSessionHistory({ limit = 20 } = {}) {
   const db         = await initDB();
   const txn        = db.transaction([STORE_LOGS, STORE_COMPLETED], 'readonly');
-  const logIndex   = txn.objectStore(STORE_LOGS).index('by_session');
   const sessIndex  = txn.objectStore(STORE_COMPLETED).index('by_completedAt');
 
   const sessions = await _promisify(sessIndex.getAll());

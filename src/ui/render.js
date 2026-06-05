@@ -48,7 +48,6 @@ export function setVirtualIdx(day, i) { _carouselIdx[day] = i; }
 
 function exName(key) { return EXERCISES[key]?.displayName ?? key; }
 
-function getRestTimes(key) { return EXERCISES[key]?.rest ?? REST_DEFAULTS; }
 
 /** Total estimated minutes remaining from `currentIdx` onward. */
 export function minsRemaining(day, currentIdx) {
