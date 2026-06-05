@@ -2,7 +2,7 @@
 // Cache-first strategy. Bump CACHE_VERSION on every deploy so users get
 // fresh assets — old caches are deleted on activate.
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME    = `workout-${CACHE_VERSION}`;
 
 const PRECACHE = [
@@ -35,7 +35,10 @@ const PRECACHE = [
   './src/ui/home.js',
   './src/ui/menu.js',
   './src/ui/nav.js',
+  './src/ui/settings.js',
   './src/utils/time.js',
+  './src/utils/settings.js',
+  './src/utils/wakeLock.js',
 ];
 
 self.addEventListener('install', event => {

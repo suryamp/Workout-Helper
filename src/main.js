@@ -60,6 +60,7 @@ import {
   settingsToggleColorblind,
   settingsToggleReduceMotion,
   settingsToggleUnits,
+  settingsForceUpdate,
   settingsFactoryReset,
 }                                              from './ui/settings.js';
 
@@ -359,6 +360,7 @@ Object.assign(window, {
   settingsToggleColorblind,
   settingsToggleReduceMotion,
   settingsToggleUnits,
+  settingsForceUpdate,
   settingsFactoryReset,
   _rerenderAllDays,
 });

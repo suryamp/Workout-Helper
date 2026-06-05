@@ -64,6 +64,13 @@ export function renderSettings() {
     <div class="settings-card">
       <div class="settings-row">
         <div class="settings-row-info">
+          <div class="settings-row-label">Force Update</div>
+          <div class="settings-row-value">Clear cached files and reload fresh</div>
+        </div>
+        <button class="settings-action-btn" onclick="settingsForceUpdate()">Update</button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
           <div class="settings-row-label">Factory Reset</div>
           <div class="settings-row-value">Permanently wipe all workout history</div>
         </div>
@@ -101,6 +108,18 @@ export async function settingsToggleUnits(isKg) {
   setSetting(SETTING_UNITS, isKg ? 'kg' : 'lbs');
   renderSettings();
   await window._rerenderAllDays?.();
+}
+
+export async function settingsForceUpdate() {
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+  }
+  if ('serviceWorker' in navigator) {
+    const reg = await navigator.serviceWorker.getRegistration();
+    await reg?.unregister();
+  }
+  location.reload();
 }
 
 export async function settingsFactoryReset() {
