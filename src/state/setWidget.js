@@ -62,6 +62,7 @@ function _lockPill(uid, pillIdx) {
   pill.weight = s.weight || 0;
   pill.locked = true;
   delete _debounceTimers[`${uid}-${pillIdx}`];
+  navigator.vibrate?.(30);
   const { sec, overtimeSec } = getSmartTimer(s.exKey || '', pill.reps, s.targetReps);
   startTimer(sec, overtimeSec);
   renderSetWidget(uid);

@@ -17,7 +17,7 @@ export function initMenu() {
         <button class="menu-item-btn" onclick="menuHistory()">History</button>
         <button class="menu-item-btn menu-item-stub" onclick="menuTrends()">Trends</button>
         <button class="menu-item-btn" onclick="menuSettings()">Settings</button>
-        <button class="menu-item-btn" onclick="menuDebug()">Debug</button>
+        <button class="menu-item-btn" onclick="menuDebug()">Debug <span class="menu-error-dot" id="menu-debug-dot" hidden></span></button>
         <button class="menu-item-btn" onclick="menuExport()">Export Data</button>
         <button class="menu-item-btn" onclick="menuAbout()">About</button>
       </div>
@@ -62,4 +62,9 @@ export function openMenu() {
 
 export function closeMenu() {
   document.getElementById('menu-overlay')?.classList.remove('open');
+}
+
+export function setDebugDot(show) {
+  const dot = document.getElementById('menu-debug-dot');
+  if (dot) dot.hidden = !show;
 }

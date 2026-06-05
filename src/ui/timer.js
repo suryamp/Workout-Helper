@@ -57,12 +57,16 @@ function _tick() {
     _inOvertime  = true;
     _timerEnd    = Date.now() + _overtimeSec * 1000;
     _remaining   = _overtimeSec;
+    navigator.vibrate?.(60);
     _updateAllTimers();
     return;
   }
 
   _updateAllTimers();
-  if (_remaining === 0 && _interval) stopTimer();
+  if (_remaining === 0 && _interval) {
+    navigator.vibrate?.([80, 50, 80]);
+    stopTimer();
+  }
 }
 
 function _updateAllTimers() {

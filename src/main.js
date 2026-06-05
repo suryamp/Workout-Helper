@@ -52,7 +52,7 @@ import { openSessionDetail, closeSessionDetail } from './ui/sessionDetail.js';
 import { showPage, setActiveTab }              from './ui/nav.js';
 import { shareText, buildShareText }           from './ui/share.js';
 import { renderHome }                          from './ui/home.js';
-import { initMenu, openMenu, closeMenu }       from './ui/menu.js';
+import { initMenu, openMenu, closeMenu, setDebugDot } from './ui/menu.js';
 import {
   renderSettings,
   settingsToggleTheme,
@@ -68,6 +68,21 @@ import {
 applyTheme();
 applyColorblind();
 applyReduceMotion();
+
+// Show a persistent toast when a new SW takes control so users can reload
+// without hunting for Force Update in settings.
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return; // first install, not an update
+    if (document.getElementById('update-toast')) return;
+    const toast = document.createElement('div');
+    toast.id        = 'update-toast';
+    toast.className = 'update-toast';
+    toast.innerHTML = `New version available <button class="update-toast-btn" onclick="location.reload()">Reload</button>`;
+    document.body.appendChild(toast);
+  });
+}
 
 // ── Save + Advance ──────────────────────
 
@@ -166,34 +181,97 @@ async function menuSettings() {
 
 async function menuDebug() {
   closeMenu();
+  localStorage.setItem('wh_debug_seen_ts', String(Date.now()));
+  syncErrorDot();
   _renderDebugPage();
   await showPage('debug', null);
+}
+
+let _debugErrorsOnly = false;
+
+function _debugFabHtml() {
+  return `
+    <div class="debug-fab">
+      <div class="debug-fab-menu" id="debug-fab-menu" hidden>
+        <button class="debug-fab-item${_debugErrorsOnly ? ' debug-fab-item-active' : ''}" onclick="toggleDebugErrorsFilter()">
+          ${_debugErrorsOnly ? '✓ ' : ''}Errors Only
+        </button>
+        <button class="debug-fab-item" onclick="shareDebugLog()">Share Log</button>
+        <button class="debug-fab-item" onclick="clearDebugLog()">Clear Log</button>
+      </div>
+      <button class="debug-fab-btn" onclick="toggleDebugFabMenu()">⋯</button>
+    </div>`;
 }
 
 function _renderDebugPage() {
   const cnt = document.getElementById('cnt-debug');
   if (!cnt) return;
-  const entries = getLog();
+  const allEntries  = getLog();
+  const errorCount  = allEntries.filter(e => /error|fail|reject/i.test(e.event)).length;
+  const entries     = _debugErrorsOnly
+    ? allEntries.filter(e => /error|fail|reject/i.test(e.event))
+    : allEntries;
+  const badgeHtml   = errorCount > 0
+    ? `<span class="debug-error-badge">${errorCount} error${errorCount > 1 ? 's' : ''}</span>`
+    : '';
+
   if (entries.length === 0) {
     cnt.innerHTML = `
-      <div class="sec-label">Debug Log</div>
-      <div class="empty">No telemetry entries.</div>`;
+      <div class="sec-label">Debug Log ${badgeHtml}</div>
+      <div class="empty">${_debugErrorsOnly ? 'No error entries.' : 'No telemetry entries.'}</div>
+      ${_debugFabHtml()}`;
     return;
   }
-  const rows = entries.slice().reverse().map(e => `
+  const rows = entries.slice().reverse().map(e => {
+    const isError = /error|fail|reject/i.test(e.event);
+    return `
     <div class="debug-entry">
-      <div class="debug-event">${e.event}</div>
+      <div class="debug-event${isError ? ' debug-event-error' : ''}">${e.event}</div>
       <div class="debug-ts">${new Date(e.ts).toLocaleString()}</div>
       <pre class="debug-data">${JSON.stringify(e.data, null, 2)}</pre>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   cnt.innerHTML = `
-    <div class="sec-label">Debug Log</div>
-    <button class="menu-item-btn debug-clear-btn" onclick="clearDebugLog()">Clear Log</button>
-    <div class="debug-entries">${rows}</div>`;
+    <div class="sec-label">Debug Log ${badgeHtml}</div>
+    <div class="debug-entries">${rows}</div>
+    ${_debugFabHtml()}`;
+}
+
+function toggleDebugFabMenu() {
+  const menu = document.getElementById('debug-fab-menu');
+  if (menu) menu.hidden = !menu.hidden;
+}
+
+function toggleDebugErrorsFilter() {
+  _debugErrorsOnly = !_debugErrorsOnly;
+  _renderDebugPage();
+}
+
+async function shareDebugLog() {
+  const entries = getLog();
+  const text    = `Workout Tracker Debug Log\n\n${JSON.stringify(entries, null, 2)}`;
+  const result  = await shareText(text);
+  if (result === 'copied') {
+    const toast = document.createElement('div');
+    toast.className   = 'share-toast';
+    toast.textContent = 'Log copied!';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+  }
+}
+
+function syncErrorDot() {
+  const seenTs    = parseInt(localStorage.getItem('wh_debug_seen_ts') || '0', 10);
+  const hasErrors = getLog().some(e => /error|fail|reject/i.test(e.event) && e.ts > seenTs);
+  document.querySelector('.nav-menu-btn')?.classList.toggle('has-errors', hasErrors);
+  setDebugDot(hasErrors);
 }
 
 function clearDebugLog() {
   clearLog();
+  localStorage.removeItem('wh_debug_seen_ts');
+  _debugErrorsOnly = false;
+  syncErrorDot();
   _renderDebugPage();
 }
 
@@ -284,7 +362,8 @@ function _showStorageError(err) {
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'visible') {
       await reconcileStaleSessions();
-      acquireWakeLock(); // re-acquire after browser auto-releases on page hide
+      acquireWakeLock();
+      syncErrorDot();
     }
   });
 
@@ -297,6 +376,7 @@ function _showStorageError(err) {
   await renderHome(nextDay);
   await showPage('home', null);
   acquireWakeLock();
+  syncErrorDot();
 })();
 
 async function _rerenderAllDays() {
@@ -357,6 +437,9 @@ Object.assign(window, {
   menuTrends,
   menuSettings,
   menuDebug,
+  toggleDebugFabMenu,
+  toggleDebugErrorsFilter,
+  shareDebugLog,
   menuExport,
   menuAbout,
   clearDebugLog,
