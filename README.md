@@ -21,7 +21,8 @@ A mobile-first progressive web app (PWA) for tracking a structured 4-day strengt
 - **Wordle-style share** — share a compact rep-grid summary of any session via the native share sheet or clipboard
 - **Weight modal** — tap the weight chip to update lbs for any exercise
 - **Custom timer** — set any arbitrary rest duration
-- **PWA-ready** — viewport and apple-mobile-web-app meta tags included
+- **Settings** — dark/light theme, colorblind palette (blue/orange), lbs/kg unit toggle, keep-screen-on, reduce motion, force update, and factory reset
+- **PWA-ready** — installable, offline-capable via service worker, viewport and apple-mobile-web-app meta tags included
 
 ---
 
@@ -70,13 +71,18 @@ workout-tracker/
     │   ├── render.js        # renderDay, carousel, progress bar, done screen
     │   ├── share.js         # Wordle-style share text builder + share/copy helper
     │   ├── sessionDetail.js # Per-session analytics bottom sheet
+    │   ├── settings.js      # Settings page rendering and toggle handlers
     │   ├── modals.js        # Weight and custom timer modals
     │   ├── timer.js         # Countdown logic, two-phase smart timer
     │   ├── history.js       # History tab rendering and entry deletion
+    │   ├── home.js          # Home screen day card grid
+    │   ├── menu.js          # Hamburger menu bottom sheet
     │   └── nav.js           # showPage, setActiveTab
     │
     └── utils/
-        └── time.js       # getLogicalDay, endOfLogicalDay (pure helpers)
+        ├── time.js       # getLogicalDay, endOfLogicalDay (pure helpers)
+        ├── settings.js   # localStorage preferences: getSetting, getUnit, applyTheme, etc.
+        └── wakeLock.js   # Screen Wake Lock API wrapper
 ```
 
 ---
@@ -126,7 +132,7 @@ The app uses a **3 AM logical day boundary** — workouts logged between midnigh
 1. Open the app — it navigates to your next scheduled day automatically
 2. Heavy days begin with a **warm-up slide** (hip flexors, clamshells, TKEs, goblet squats)
 3. For each exercise:
-   - Tap the **weight chip** to set your working weight
+   - Tap the **weight chip** to set your working weight (lbs or kg, configurable in Settings)
    - Tap a **pill** to enter reps (starts at target, decrements on each tap)
    - Tap **Start New Set** to confirm — this locks the set and starts the rest timer
 4. Hit **Next →** to advance; **← Prev** to go back
@@ -149,8 +155,8 @@ Layers load in strict dependency order — each layer may only reference variabl
 tokens.css → layout.css → components.css → animations.css
 ```
 
-- `animations.css` owns **all** `@keyframes`. `components.css` references them by name but never defines them.
-- Theming is done entirely through CSS custom properties in `tokens.css`.
+- `animations.css` owns **all** `@keyframes` and reduce-motion overrides. `components.css` references keyframes by name but never defines them.
+- Theming, colorblind palette, and dark/light variants are all done through CSS custom properties in `tokens.css` — toggled via `data-theme` and `data-colorblind` attributes on `<html>`.
 
 ---
 
