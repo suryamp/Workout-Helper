@@ -141,6 +141,11 @@ async function showHome() {
 
 // ── Menu item handlers ───────────────────
 
+async function menuWorkouts() {
+  closeMenu();
+  await showHome();
+}
+
 async function menuHistory() {
   closeMenu();
   await showPage('history', null);
@@ -347,6 +352,7 @@ Object.assign(window, {
   // Menu
   openMenu,
   closeMenu,
+  menuWorkouts,
   menuHistory,
   menuTrends,
   menuSettings,
