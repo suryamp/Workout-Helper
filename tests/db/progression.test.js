@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
 import { initDB, _resetDB, STORE_LOGS, _requireDB } from '../../src/db/connection.js';
-import { getProgressionData } from '../../src/db/logs.js';
+import { getProgressionData, computeVolume } from '../../src/db/logs.js';
 import { EXERCISES } from '../../src/data/exercises.js';
 
 // Helper: write a raw set-log directly to the STORE_LOGS store.
@@ -134,5 +134,36 @@ describe('getProgressionData — streak detection', () => {
     await insertLog({ exerciseKey: PLANKS, sets: fullSets });
     const { levelUp } = await getProgressionData(PLANKS);
     expect(levelUp).toBe(false);
+  });
+});
+
+describe('computeVolume', () => {
+  test('sums weight × reps across all sets and logs', () => {
+    const logs = [
+      { sets: [{ weight: '100', reps: '5' }, { weight: '100', reps: '5' }] },
+      { sets: [{ weight: '50', reps: '10' }] },
+    ];
+    expect(computeVolume(logs)).toBe(1500); // 500 + 500 + 500
+  });
+
+  test('returns 0 for an empty log array', () => {
+    expect(computeVolume([])).toBe(0);
+  });
+
+  test('returns 0 for bodyweight sets (weight "0")', () => {
+    expect(computeVolume([{ sets: [{ weight: '0', reps: '10' }] }])).toBe(0);
+  });
+
+  test('returns 0 for logs with empty sets array', () => {
+    expect(computeVolume([{ sets: [] }])).toBe(0);
+  });
+
+  test('handles non-numeric weight and reps without throwing', () => {
+    expect(computeVolume([{ sets: [{ weight: '', reps: '' }] }])).toBe(0);
+  });
+
+  test('handles mixed valid and zero-weight sets', () => {
+    const logs = [{ sets: [{ weight: '100', reps: '5' }, { weight: '0', reps: '10' }] }];
+    expect(computeVolume(logs)).toBe(500);
   });
 });

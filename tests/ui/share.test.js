@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest';
-import { buildShareText } from '../../src/ui/share.js';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { buildShareText, shareText } from '../../src/ui/share.js';
 
 const SESSION = {
   day:         'heavy-a',
@@ -69,5 +69,40 @@ describe('buildShareText', () => {
     const text = buildShareText(SESSION, longLogs);
     expect(text).toContain('…');
     expect(text).not.toContain('A Very Long Exercise Name Here');
+  });
+});
+
+describe('shareText', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  test('returns "shared" when navigator.share succeeds', async () => {
+    vi.stubGlobal('navigator', { share: vi.fn().mockResolvedValue(undefined) });
+    expect(await shareText('hello')).toBe('shared');
+    expect(navigator.share).toHaveBeenCalledWith({ text: 'hello' });
+  });
+
+  test('returns "error" when navigator.share is aborted by the user', async () => {
+    const err = Object.assign(new Error('AbortError'), { name: 'AbortError' });
+    vi.stubGlobal('navigator', { share: vi.fn().mockRejectedValue(err) });
+    expect(await shareText('hello')).toBe('error');
+  });
+
+  test('falls through to clipboard when navigator.share throws a non-abort error', async () => {
+    const err = Object.assign(new Error('Not allowed'), { name: 'NotAllowedError' });
+    vi.stubGlobal('navigator', {
+      share:     vi.fn().mockRejectedValue(err),
+      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    });
+    expect(await shareText('hello')).toBe('copied');
+  });
+
+  test('returns "copied" when navigator.share is absent and clipboard succeeds', async () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
+    expect(await shareText('hello')).toBe('copied');
+  });
+
+  test('returns "error" when clipboard also fails', async () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) } });
+    expect(await shareText('hello')).toBe('error');
   });
 });

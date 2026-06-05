@@ -117,12 +117,23 @@ describe('maybeStartSession', () => {
 describe('session completeSession guard (state layer)', () => {
   test('is idempotent — calling completeSession twice does not double-commit', async () => {
     await maybeStartSession('heavy-a');
+    stageSetLog('heavy-a', {
+      exerciseKey:  'barbell_back_squat',
+      exerciseName: 'Back Squat',
+      uid:          'heavy-a-0-0',
+      sets:         [{ weight: '185', reps: '5' }],
+    });
     await sessionCompleteSession('heavy-a');
     await sessionCompleteSession('heavy-a'); // second call must be a no-op
 
     const completed = await getCompletedSessions();
     const forToday  = completed.filter(s => s.logicalDay === getLogicalDay());
     expect(forToday.length).toBe(1);
+
+    // Staged logs must be written exactly once — not duplicated on second call.
+    const history     = await getHistory({ includeSeeded: false });
+    const forSession  = history.filter(e => e.uid === 'heavy-a-0-0');
+    expect(forSession.length).toBe(1);
   });
 });
 
