@@ -15,7 +15,7 @@ A mobile-first progressive web app (PWA) for tracking a structured 4-day strengt
 - **Superset support** — paired exercises rendered as a single linked card
 - **Warm-up slides** — shown before heavy days
 - **Session management** — stale sessions from previous days are auto-closed on next open
-- **History tab** — recent workout log with per-exercise set breakdowns and delete support
+- **History tab** — filterable workout log with day and date-range filters, per-exercise rep dots, volume, and load-more pagination
 - **Session detail sheet** — tap any session to see per-set analytics, volume vs. last time, and progression state; swipe down to dismiss
 - **Volume animal** — done screen and session detail compare your total session volume to a real-world animal weight
 - **Wordle-style share** — share a compact rep-grid summary of any session via the native share sheet or clipboard

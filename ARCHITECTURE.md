@@ -406,8 +406,8 @@ WorkoutDB (SCHEMA_VER = 2)
 │   │     Purpose: "all logs for a given workout day key"
 │   │
 │   ├── by_date   'date'  non-unique  [v1]
-│   │     Purpose: history screen newest-first full scan
-│   │     Used by: getHistory() without exerciseKey filter
+│   │     Purpose: newest-first full scan of set-logs
+│   │     Used by: getHistory() (test-internal utility, not in public barrel)
 │   │
 │   ├── by_seeded 'seeded'  non-unique (sparse)  [v1]
 │   │     Purpose: filter seed records out of history queries
@@ -698,7 +698,7 @@ if (event.oldVersion < 3) {
 | `src/db/index.js` | Public API barrel — re-exports everything from the three sub-modules |
 | `src/db/connection.js` | `_db` singleton, `initDB`, schema v1+v2, seeding, `_idbWrite` / `_promisify` / `_requireDB`, store name constants |
 | `src/db/sessions.js` | `_pending` accumulator, `stageSetLog`, `abandonSession`, `completeSession` (atomic flush + progression snapshot), active/completed session CRUD |
-| `src/db/logs.js` | `getProgressionData`, `getHistory`, `getSessionDetails`, `deleteHistoryEntry`, `computeVolume`, `_getRecentLogs`, streak computation |
+| `src/db/logs.js` | `getProgressionData`, `getSessionHistory`, `getLogsForSession`, `getSessionDetails`, `deleteSession`, `computeVolume`, `_getRecentLogs`, streak computation. `getHistory` is kept for test use only and is not exported from the barrel. |
 | `src/utils/time.js` | `getLogicalDay`, `endOfLogicalDay` — pure functions, zero imports |
 | `src/utils/settings.js` | `getSetting`, `setSetting`, `getUnit`, `applyTheme`, `applyColorblind`, `applyReduceMotion` — localStorage preferences, zero imports |
 | `src/utils/wakeLock.js` | `acquireWakeLock`, `releaseWakeLock` — Screen Wake Lock API wrapper |
@@ -709,6 +709,6 @@ if (event.oldVersion < 3) {
 | `src/ui/share.js` | `buildShareText`, `shareText` — Wordle-style share snippet builder and native share/clipboard helper |
 | `src/ui/sessionDetail.js` | `openSessionDetail`, `closeSessionDetail` — bottom sheet with per-set analytics, swipe-to-dismiss |
 | `src/ui/modals.js` | Weight modal, custom timer modal — DOM only, no business logic |
-| `src/ui/history.js` | `renderHistory`, `deleteEntry` |
+| `src/ui/history.js` | `renderHistory`, `deleteSession`, `shareSession`, filter sheet (day + date-range, lazy singleton overlay), `historyLoadMore` |
 | `src/ui/settings.js` | `renderSettings`, `settingsToggle*` handlers — Settings page UI, owns all settings toggle interactions |
 | `src/ui/nav.js` | `showPage`, `setActiveTab` |

@@ -77,7 +77,7 @@ Each CSS file may only reference variables defined in a previous layer. `animati
 | `src/db/index.js` | Public API barrel — re-exports from the three sub-modules below |
 | `src/db/connection.js` | IDB singleton, schema v1+v2, seeding, `_idbWrite`/`_promisify`/`_requireDB`, store name constants |
 | `src/db/sessions.js` | `_pending` buffer, `stageSetLog`, `abandonSession`, `completeSession` (atomic flush + progression snapshot), active/completed session CRUD |
-| `src/db/logs.js` | `getProgressionData`, `getHistory`, `getSessionDetails`, `deleteHistoryEntry`, `computeVolume`, streak computation |
+| `src/db/logs.js` | `getProgressionData`, `getSessionHistory`, `getLogsForSession`, `getSessionDetails`, `deleteSession`, `computeVolume`, `_getRecentLogs`, streak computation. `getHistory` exists but is test-internal only (not in barrel) |
 | `src/utils/time.js` | `getLogicalDay`, `endOfLogicalDay` — pure functions, no imports |
 | `src/utils/settings.js` | `getSetting`, `setSetting`, `getUnit`, `applyTheme`, `applyColorblind`, `applyReduceMotion` — localStorage-backed preferences, no imports |
 | `src/utils/wakeLock.js` | `acquireWakeLock`, `releaseWakeLock` — Screen Wake Lock API wrapper |
@@ -88,7 +88,7 @@ Each CSS file may only reference variables defined in a previous layer. `animati
 | `src/ui/share.js` | `buildShareText`, `shareText` — Wordle-style share snippet builder and native share/clipboard helper |
 | `src/ui/sessionDetail.js` | `openSessionDetail`, `closeSessionDetail` — bottom sheet with per-set analytics, swipe-to-dismiss |
 | `src/ui/modals.js` | Weight modal, custom timer modal — DOM only, no business logic |
-| `src/ui/history.js` | `renderHistory`, `deleteEntry` |
+| `src/ui/history.js` | `renderHistory`, `deleteSession`, `shareSession`, filter sheet (`openHistoryFilter`, `closeHistoryFilter`, `toggleHistoryDayFilter`, `setHistoryDateRange`, `setHistoryCustomFrom/To`, `clearHistoryFilter`), `historyLoadMore` |
 | `src/ui/settings.js` | `renderSettings`, toggle handlers for theme/units/colorblind/wake lock/reduce motion/factory reset |
 | `src/ui/nav.js` | `showPage`, `setActiveTab` |
 
