@@ -1,5 +1,7 @@
 # 💪 Workout Tracker
 
+[![Tests](https://github.com/suryamp/Workout-Helper/actions/workflows/test.yml/badge.svg)](https://github.com/suryamp/Workout-Helper/actions/workflows/test.yml)
+
 **Live demo: [suryamp.github.io/Workout-Helper](https://suryamp.github.io/Workout-Helper/)**
 
 A mobile-first progressive web app (PWA) for tracking a structured 4-day strength program. Built with vanilla JavaScript and IndexedDB — no framework, no build step.
